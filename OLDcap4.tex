@@ -1,0 +1,29 @@
+
+We have tried to improve stereology estimators. In order to do so, we tried to approximate expectations using QMC integration with $N$ optimal points that minimize the worst case error in the reproducing kernel Hilbert space $H_{mix}^1$. Since stereology estimators usually require to obtain expectations, this idea should provide estimators with low variances, improving the quality of the estimated quantity. So as to apply this idea, we selected an associated point (AP) for the test system used in the estimation and carried out the whole estimation process repeatedly, putting the AP of the test system in a different optimal point every time and averaging the results.\\
+
+
+Knowing this, we selected three known test systems, namely the test system of quadrats, the Buffon test system and the Buffon-Steinhaus test system, and implemented the process above in python code for each one of them in order to test its performance and compare it to other known methods. What's more, we not only tested it for associated points $(x,y) \in \mathbb{R}^2$ with $(x,y)$ being optimal points, but also with associated points $(x,y) \in \mathbb{R}^2$ with $x$ being the first coordinate of the optimal point and a modified rotation angle $\omega + h \text{ (mod $\pi$) } \in [0,\pi)$ with $h$ being the second coordinate of the optimal point.\\
+
+
+The computed results for every experiment carried out with all test systems led us to make two hypotheses: 
+\begin{itemize}
+    \item At least one of the CBC and Hinrichs methods gives the lowest coefficient of error values when used with the $(x,\omega)$ and $(x,y)$ processes respectively. Also, one method might be better than the other depending on the isotropy, anisotropy or symmetry that the analyzed object has.
+    \item Changing the value of the parameter $\gamma$ mentioned in \cite{Hinrichs.pdf} may provide better results for the Hinrichs method in every experiment.
+\end{itemize}
+
+
+Nevertheless, the Hinrichs method seems to give low coefficient of error values at least for one of the processes $(x,y)$ or $(x,\omega)$, which makes it a good and easy-to-implement estimation method for stereology.\\
+
+
+Some open problems that arise due to the development of this work are:
+\begin{itemize}
+    \item How does the Hinrichs method behave depending on the type of curve (isotropic, anisotropic, symmetry)?
+    \item How much does changing $\gamma$ influence on the results?
+    \item Are there other ways to implement the idea behind this work in stereology?
+\end{itemize}
+
+
+
+
+
+

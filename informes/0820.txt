@@ -1,0 +1,2 @@
+con el compilador, cuando genere codigo, de enteros o binarios, que intente optimizar las formulas. Funcion añadida del compilador que te comprime una secuencia de bits, (hacer zip, LZ78, muy parecido al fsr, ). 
+Domingo: describir eigenvalue, y su relacion con los eigenvector y los eigenvalue algebra

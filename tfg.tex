@@ -1,0 +1,87 @@
+\documentclass{tfg_domingo}
+% \documentclass[numeros]{tfg_domingo}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{bbm}
+
+\autor{Pedro Castro Cutillas}
+\titulo{no lo se}
+% Título corto para los encabezamientos de pagina:
+\corto{} % En blanco si no es necesario recortarlo.
+\ingles{Efficient sampling for different scales.\\
+Stereology applied to AI.}
+\fecha{Julio - 2024}
+% La normativa prescribe «cuatro o cinco palabras clave, en
+% español y en inglés, para su indexación en el repositorio
+% de TFG».
+\palabras{Estereología, IA, Conteo de personas, Eficiencia}%
+  {Stereology, AI, Crowd Counting, Efficiency}
+
+\usepackage{amsthm} % Esto solo es relleno.
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{comment} 
+
+
+\newtheorem{Def}{Definition}
+%\newtheorem{Proof}{Proof}
+\newtheorem{Th}{Theorem}
+\newtheorem{Algorithm}{Algorithm}
+\newtheorem{Lemma}{Lemma}
+\newtheorem{Prop}{Proposition}
+\newtheorem{Corollary}{Corollary}
+\providecommand{\abs}[1]{\lvert#1\rvert}
+\providecommand{\norm}[1]{\lVert#1\rVert}
+\renewcommand{\exp}[1]{e^{#1}}
+
+\begin{document}
+
+% Si alguna palabra se divide entre dos líneas en un punto
+% indebido, podemos indicar aquí los puntos de corte
+% aceptables (si los hay), p. ej,
+% \hyphenation{ba-rro-co, frío, cria-do, su-per-ra-tón}
+\hyphenation{Dijkstra new-speak}
+
+\portada
+\frontmatter
+% \sucinto{A Sofía}
+\gracias{\input{agradecimientos.txt}}
+\resumen{\input{resumen.tex}}{\input{abstract.tex}}
+\tableofcontents
+
+\mainmatter
+\chapter{Introduction}\label{cap:Intro}
+\input{cap1.tex}
+
+
+\chapter{Underlying theory of our method}\label{cap:Teoria}
+\input{cap2.tex}
+
+
+
+\chapter{Experimental results}\label{cap:Resultados}
+\input{cap3.tex}
+
+
+
+\chapter{Conclusions and open problems}\label{cap:Conclusiones}
+\input{cap4.tex}
+
+
+
+% Indique aquí el fichero .bib que contenga su bibliografía.
+\bibliography{refs}
+
+\appendix
+\chapter{Appendix}
+\input{app1.tex}
+
+
+
+\end{document}
+
+
+

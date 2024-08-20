@@ -1,0 +1,1357 @@
+%%%Estructura:
+%
+%[No teoría de probabilidad (TFG) porque vamos a usar MAE???
+% Quizás puedo meterlo porque la varianza del método es básicamente un error
+% tal que el resultado final tenga un error de +- algo y luego puedo ver
+% si la cantidad de personas real está dentro del intervalo de error del método???
+% Si meto teoría de probabilidad sería: 
+%%Introducción a media y varianza probabilisticas
+%%Adaptación de la varianza al test system que usamos]
+%
+%[Ahora no hay QuasiMonteCarlo Integration, lo que hay es:]
+%%Teoría sobre IA/Machine learning, funcionamiento de capas, cómo funciona
+% el modelo que usamos (GauNet o FGENet), funciones de pérdida y de error (MAE), etc. (OBS que la varianza es del valor real de personas y la función de pérdida es la que se usa mientras se entrena el modelo, la varianza va ligada al resultado de toda la imagen, la función de perdida va ligada al resultado de entrenar con cada recorte) + problemas de la IA en reconocimiento de personas
+
+%%Cómo vamos a integrar IA + Estereología, explicar point-sets y funcionamiento de 
+% lo que hará el programa.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%Teoría de probabilidad
+\section{Probability Theory}
+This section introduces the relationship between probability theory
+and Hilbert spaces. We will see that better estimators relate to sampling points that minimize some quantity. The section aims to connect all these subject in a rigorous way.
+%Intro a media y varianza
+\subsection{Mean and Variance}
+%%%%%%%%Media y varianza 
+%(Empezar con second order stereology en CO.IAS.17.Hist.pdf) y 
+% seguir con formulas generales??? 
+% y formulas para cada problema.
+% Domingo: Mejor previous chapter
+As it was shown in the previous chapter, estimation problems in Stereology generally make use of the expectation (namely the mean) in order to get a better estimation of the desired quantity. If one wants to know how good of an estimation was obtained, the variance comes into play. However, since the real quantity that we want to estimate is unknown, 
+it is necessary to predict the error as well with \textit{variance predictors}, which are usually employed to fulfill the same role as the usual variance.\\
+
+%Domingo: Some reformating, also we did not introduce what is systematic sampling.
+We follow the naming convention in Stereology, stating that the mean of a random variable is called a \textit{first order property} and the variance is a \textit{second order property}. We remark that formulas for the variance of %when mean of 
+independent estimations are known. However, under systematic sampling the sampled items are correlated to unknown degrees depending on the population pattern, thus the problem is non trivial unless the
+%Domingo: Hay que definir que es una random permutation
+population is a random permutation (\cite{CO.IAS.17.Hist.pdf}).\\
+
+In probability, we have the following definitions for the mean and the variance of real valued random variables.\\
+
+%Domingo: He añadido la definicion de varianza aqui
+\begin{Def}
+    Given a sample space $\Omega$, an event space $\sigma$ and a probability function $\mathbb{P}$. If $X$ is a discrete, real valued random variable defined in a probability space $(\Omega, \sigma, \mathbb{P})$, the \textit{mathematical expectation of $X$} and the \textit{variance of $X$} are defined as
+    \begin{equation*}
+        \mathbb{E}[X]=\sum_n x_n \cdot \mathbb{P}_X[x_n] = \sum_n x_n \cdot \mathbb{P}[X=x_n], \quad Var(X)=\mathbb{E}[(X-\mathbb{E}[X])^2]
+    \end{equation*}
+    given that the sums exist.
+\end{Def}
+\vspace{2mm}
+\begin{Def}
+    Given a sample space $\Omega$, an event space $\sigma$ and a probability function $\mathbb{P}$. If $X$ is a real valued random variable defined in a probability space $(\Omega, \sigma, \mathbb{P})$ such that it's density function $f_X$ exists, the \textit{mathematical expectation of $X$} can be defined as
+    \begin{equation*}
+        \mathbb{E}[X]=\int_{-\infty}^{\infty} t \cdot f_X(t)\,\mathrm{d}t,
+    \end{equation*}
+    given that this expression makes sense.
+\end{Def}
+
+\vspace{2mm}
+Furthermore, a very useful proposition says as follows.\\
+
+\begin{Prop}
+    Given a sample space $\Omega$, an event space $\sigma$  and a probability function $\mathbb{P}$. If $X$ is a real valued random variable defined in a probability space $(\Omega,\sigma,\mathbb{P})$ such that $\mathbb{E}[\abs{X}^2]<\infty$, then
+    \begin{equation*}
+        Var(X)=\mathbb{E}[X^2]-(\mathbb{E}[X])^2
+    \end{equation*}
+\end{Prop}
+\begin{proof} By definition, $Var(X)=\mathbb{E}[(X-\mathbb{E}[X])^2]$. What's more, $$ (X-\mathbb{E}[X])^2 = X^2 + (\mathbb{E}[X])^2 - 2X\mathbb{E}[X]. $$
+Given that $\mathbb{E}[X]$ is a real value, applying the expectation we have
+\begin{multline*}
+    \mathbb{E}[(X-\mathbb{E}[X])^2] = \mathbb{E}[X^2] + \mathbb{E}[(\mathbb{E}[X]^2)] - \mathbb{E}[2X\mathbb{E}[X]] \\ = \mathbb{E}[X^2] + (\mathbb{E}[X])^2 - 2\mathbb{E}[X]\mathbb{E}[X] = \mathbb{E}[X^2] - (\mathbb{E}[X])^2.
+\end{multline*}
+This finishes the proof.
+\end{proof}
+\vspace{2mm}
+
+% Mirar cuánto he copiado literal de Cavalieri_basics_R1.pdf 
+
+%Reescribir con N en vez de T (hecho)
+Regarding the error variance estimator, we will now show how to obtain one for the 1-dimensional case. Let $f$ be a predictor function such that it is periodic in $[0,1)$  %Domingo: Hay que cambiar que la funcion tenga soporte acotado por ser periodica.
+and define the \textit{covariogram} as
+\begin{equation} \label{eqCovariograma}
+    g(h) := \int_0^1 f(x) \cdot f(x+h) \,\mathrm{d}x.
+\end{equation}
+This concept will be of utter importance, so first lets give some basic properties.\\
+
+\begin{Prop}
+    If $f$ is a periodic function in $[0,1)$ and $g$ is its covariogram, then the following properties apply:
+    \begin{enumerate}
+        \item $g$ is symmetric about $h=0$, namely: $g(h) = g(-h)$
+        \item $\abs{g(h)} \leq g(0)$ (\textit{i.e.} $\sup_{h}{g(h)} = g(0)$)
+        \item $\int_0^1 g(h) \,\mathrm{d}h = \Bigg\{ \int_0^1 f(x) \,\mathrm{d}x \Bigg\}^2 =: V^2$
+    \end{enumerate}
+\end{Prop}
+\begin{proof} 
+%Domingo: Asi se veia mal
+We start by proving the first item
+$$ g(-h) = \int_0^1 f(x) \cdot f(x-h) \,\mathrm{d}x =\{ y=x-h; dy=dx \}= \int_0^1 f(y+h) \cdot f(y) \,\mathrm{d}y = g(h).$$
+For the second item
+\begin{multline*}
+        0 \leq \int_0^1 [ f(x+h) - f(x) ]^2 \,\mathrm{d}x = \int_0^1 f^2(x+h) \,\mathrm{d}x \hspace{1mm} + \int_0^1 f^2(x) \,\mathrm{d}x \hspace{1mm} - 2\cdot \int_0^1 f(x) \cdot f(x+h) \,\mathrm{d}x \\
+        = g(0) + g(0) -2\cdot g(h)
+    \end{multline*} 
+For the last item, 
+$$ \int_0^1 \,\mathrm{d}h \int_0^1 f(x) \cdot f(x+h) \,\mathrm{d}x = \int_0^1 f(x) \,\mathrm{d}x \int_0^1 f(x+h) \,\mathrm{d}h = \Bigg\{ \int_0^1 f(x) \,\mathrm{d}x \Bigg\}^2.$$
+This finishes the proof.
+%Domingo: Una cosa, las ecuaciones se puntuan con punto final.
+\end{proof}
+
+\vspace{2mm}
+
+\textbf{Note:} We remark that if $f$ is integrable, then its covariogram is derivable. This will be important when considering the Hilbert space of functions defined later in this chapter.\\%Pregunta??????
+
+%Domingo: Lo he escrito a toda prisa. Espero que este bien
+We apply this to design an estimator for the following parameter of interest:
+\begin{equation*}
+    V = \int_0^1 f(x) \mathrm{d}x,
+\end{equation*}
+where $f$ is a periodic function, with period $1$.
+Lets imagine that we take observations at $z+j/N$ with $j=0,1,2,\ldots, N-1$. An estimator for $V$ reads
+\begin{equation*}
+    \widehat{V} = \frac{1}{N} \cdot \sum_{j=0}^{N-1} f\left(z+\frac{j}{N}\right) \equiv v(z)
+\end{equation*}
+which is a periodic function of $z$ with period $1/N$, thus it suffices to consider $z\in (0,1/N)$. As a result, assuming $z \sim U(0,1/N)$ we have
+\begin{equation*}
+    \mathbb{E}[v(z)] = \int_0^{1/N} \frac{\,\mathrm{d}z}{1/N} \cdot \frac{1}{N}\cdot \sum_j f(z+j/N) = \sum_j \int_0^{1/N} f(z+j/N) \,\mathrm{d}z = \sum_j V_j = V,
+\end{equation*}
+that is, $v(z)$ is an UE of $V$.\\
+
+Now, by definition,
+\begin{equation*}
+    Var(v(z)) = \frac{1}{1/N} \int_0^{1/N} v^2(z) \,\mathrm{d}z - V^2 = N \int_0^{1/N} v^2(z) \,\mathrm{d}z - V^2
+\end{equation*}
+Since $v(z)$ is periodic of period $1/N$, we can write it as a \textit{Fourier series},
+\begin{equation*}
+    v(z) = \sum_{k=-\infty}^{\infty} c_k \cdot \exp{2\pi i k zN},
+\end{equation*}
+where 
+\begin{equation*}
+    c_k = 
+    \begin{cases}
+         N \int_0^{1/N} v(z) \cdot \exp{(-2\pi i k z N)} \,\mathrm{d}z& (k>0)\\
+         N \int_0^{1/N} v(z) \cdot \exp{(2\pi i k z N)} \,\mathrm{d}z& (k<0).
+    \end{cases}
+\end{equation*}
+\vspace{2mm}
+%Domingo: Tendriamos que mirar todos los sitios donde has utilizado \exp, no me gusta como queda. Quizás \renewcommand{\exp}[1]{e^{#1}}
+Substituting $v(z)$, for $k>0$ we can write
+\begin{equation*}
+    c_k = N \int_0^{1/N} \frac{1}{N} \cdot \sum_{j=0}^{N-1} f(z+j/N) \cdot \exp{(-2\pi i k z N)} \, \mathrm{d}z = \int_{0}^{1} f(z) \cdot \exp{(-2\pi i k z N)} \,\mathrm{d}z
+\end{equation*}
+and the conjugate for $k<0$.\\
+
+Using \textit{Parseval's theorem} and $v(z)$'s periodicity we get
+\begin{equation*}
+    N \int_0^{1/N} v^2(z) \,\mathrm{d}z = \sum_{k=-\infty}^{\infty} c_k \overline{c_k},
+\end{equation*}
+therefore
+\begin{equation*}
+    Var(v(z)) = \sum_{k=-\infty}^{\infty} c_k \overline{c_k} - \int_{0}^{1} g(h) \,\mathrm{d}h,
+\end{equation*}
+where $\overline{c_k}$ is the conjugate of $c_k$.\\
+
+% Domingo  : Los limites son entre 0 y 1, no entre infinito y menos infinitos.
+We introduce the following notation
+\begin{equation*}
+    F(u) := \int_{0}^{1} f(z) \cdot \exp{(-2\pi i u z)} \,\mathrm{d}z,
+\end{equation*}
+then
+\begin{equation*}
+    Var(v(z)) = \sum_{k=-\infty}^{\infty} F\left( k N \right) \overline{F}\left( k N \right) - \int_{0}^{1} g(h) \,\mathrm{d}h
+\end{equation*}
+where $\overline{F}(\cdot)$ is the conjugate of $F(\cdot)$.\\
+
+Consider now the transform of $g(h)$, namely
+\begin{multline*}
+    G(u) := \int_{0}^{1} g(h) \cdot \exp{(-2\pi i u h)} \,\mathrm{d}h = \int_{0}^{1} f(x) \,\mathrm{d}x \int_{0}^{1} f(x+h) \cdot \exp{(-2\pi i u h)} \,\mathrm{d}h \\
+    = \int_{0}^{1} f(x) \,\mathrm{d}x \int_{0}^{1} f(r) \cdot \exp{(-2\pi i u (r-x))} \,\mathrm{d}x = F(u) \cdot \overline{F}(u),
+\end{multline*}
+then the Fourier coefficients of the Variance have to be symmetric, giving,
+\begin{equation*}
+    Var(v(z)) = \sum_{-\infty}^{\infty} G\left( k N \right) - G(0) = 2\cdot \sum_{k=1}^{\infty} G\left( k N \right).
+\end{equation*}
+% Domingo: He escrito esto a toda leche.
+In order to have a predictor, we are going to model the variance and suppose that the covariogram can be approximated by a polynomial, namely
+\begin{equation*}
+    g(h) := \sum_{j=0}^{r} a_j \cdot \abs{h}^j.
+\end{equation*}
+We substitute the model for the covariogram and calculate the Fourier coefficients: 
+%Domingo: BUFFF, ahora me cambia lo de la gamma function. Lo cambio pero 
+\begin{equation*}
+    G(u) = 2\cdot \int_0^{1} \bigg( \sum_{j=0}^r a_j \cdot h^j \bigg) \cdot \exp{(-2\pi i u h)} \,\mathrm{d}h = 2\cdot \sum_{j=0}^r a_j \int_{0}^{1} h^j \cdot \exp{(-2\pi i u h)} \,\mathrm{d}h.
+\end{equation*}
+Because we only need real value of the variance, 
+that is, the real part of $G(u)$, we define
+\begin{equation*}
+    \Gamma_{inc} (m) := \int_0^{1} y^{m-1} \cdot \exp{-y} \,\mathrm{d}y \approx \Gamma (m),
+\end{equation*}
+thus, taking $y=2\pi i u h$ we get
+\begin{equation*}
+    \int_{0}^{1} h^j \cdot \exp{(-2\pi i u h)} \,\mathrm{d}h = \frac{1}{(2\pi i u)^{j+1}} \int_0^{1} y^j \cdot \exp{(-y)} \,\mathrm{d}y = \frac{\Gamma (j+1)}{(2\pi i u)^{j+1}},
+\end{equation*}
+and because we want the real part, we only want the terms given by odd $j$, namely $j=2p-1$, $p=1,2,...$ . In consequence,
+\begin{equation*}
+    Var(v(z)) = 2\cdot \sum_{k=1}^{\infty} Re\left[G\left( k N \right)\right] = 2\cdot \sum_{p=1}^j a_{2p-1} \cdot \frac{1}{N^{2p}} \cdot \Bigg\{ 2\cdot \frac{\Gamma (2p)}{(-1)^p \cdot (2\pi)^{2p}} \cdot \sum_{k=1}^{\infty} \frac{1}{k^{2p}} \Bigg\}
+\end{equation*}
+
+Furthermore, since the \textit{Bernoulli number} $B_{2p} \equiv B_{2p}(0)$ can be expressed
+\begin{equation*}
+    B_{2p}(0) = \frac{(-1)^{p-1} \cdot 2\Gamma (2p+1)}{(2\pi)^{2p}} \cdot \sum_{k=1}^{\infty} \frac{1}{k^{2p}},
+\end{equation*}
+we can rewrite the variance as
+\begin{equation*}
+    Var(v(z)) = -\sum_{p=1}^{\lfloor \frac{r+1}{2} \rfloor} a_{2p-1} \cdot \frac{B_{2p}}{p \cdot N^{2p}} = -a_1  \frac{B_2}{N^{2}} -  a_3  \frac{B_4}{2 \cdot N^{4}} - ...
+\end{equation*}
+
+Considering that $a_1 = g'(0)$ under the polynomial model and that $B_2 = 1/6$, we can approximate the variance as follows,
+\begin{equation*}
+    Var(v(z)) \approx -  \frac{g'(0)}{6N^{2}}.
+\end{equation*}
+
+Finally, lets fit the parable $g(h) = a_0 + a_1 \cdot h + a_2 \cdot h^2$ through the sample points $\{ (j/N,\widehat{g}(j/N)), \hspace{1mm} j=0,1,2 \}$, where
+
+
+\begin{equation*}
+    \widehat{g}(j/N) = \frac{1}{N}\cdot \sum_{r=1}^{S} f_r \cdot f_{r+j}
+\end{equation*}
+with $S$ the total number of sections and $f_r$ the \textit{r}-th section area observed at the \textit{r}-th abscissa. More briefly, write
+\begin{equation*}
+    g_0 \equiv \sum f_i^2,\quad 
+    g_1 \equiv \sum f_i \cdot f_{i+1},\quad
+\mathrm{ and} \
+    g_2 \equiv \sum f_i \cdot f_{i+2},
+\end{equation*}
+where $f_i \equiv f(z+i/N)$ and thus $\widehat{g}(j/N) \equiv \frac{1}{N}\cdot g_j$.
+Then we have
+\begin{equation*}
+    \frac{1}{N} \cdot g_0 = a_0,\quad
+    \frac{1}{N} \cdot g_1 = a_0 + a_1 \cdot \frac{1}{N} + a_2 \cdot \frac{1}{N^2},\quad 
+    \frac{1}{N} \cdot g_2 = a_0 + a_1 \cdot \frac{2}{N} + a_2 \cdot \left(\frac{2}{N}\right)^2
+\end{equation*}
+from which we get
+\begin{equation*}
+    a_1 = \frac{4g_1 - g_2 - 3g_0}{2}.
+\end{equation*}
+\vspace{2mm}
+
+Therefore, we can get the following variance estimator,
+\begin{equation*}
+    \widehat{Var(v(z))} \approx - \frac{a_1}{6N^2} = \frac{3g_0 + g_2 - 4g_1}{12} \cdot \frac{1}{N^2}
+\end{equation*}
+
+\vspace{2mm}
+
+This is the general method to approximate the variance. Next, we will present the error variance estimator that has been developed for the estimation procedure that will be used in this work. The method to discover them follows the same principles but the proofs are more involved due to the number of variables.\\
+
+
+%Varianza para el test system
+\subsection{Variance Prediction Formula for Particle Number Estimation in the Plane with a Test System of Quadrats}
+
+Consider $Y\subset \mathbb{R}^2$ a bounded and finite set of $N\equiv N(Y)$ particles. We want to estimate $N$ using a test system of quadrats $\Lambda_x$ whose fundamental tile $J_0$ is a square with side length $T$ and whose fundamental probe $T_0$ is a square quadrat with side length $0<t\leq T$. Let $Q$ represent the number of particles captured by $\Lambda_x$, $x\sim UR(J_0)$. Since $Y$ contains point particles, $Q$ is the total number of particles within the quadrats, otherwise, the particles should be captured using unbiased sampling rules such as the \textit{forbidden line rule}.\\
+
+As it was shown in the first chapter, an UE for $N$ is given by
+\begin{equation*}
+    \widehat{N} = \frac{a}{a_0} \cdot Q = \frac{T^2}{t^2} \cdot Q
+\end{equation*}
+In an effort to interpret the error variance predictor for $\widehat{N}$, the test system is regarded as a two stage sample:
+\begin{itemize}
+    \item \textit{First stage sample:} It consists of a set of $n$ equidistant
+    %%DomingoMaster: No hemos dicho que son las bandas de Cavalieri
+    stripes of thickness $t$, which are called \emph{Cavalieri stripes}, and period $T$ encompassing the particle population $Y$.
+    \item \textit{Second stage sample:} It consists of another set of Cavalieri stripes with the same period and thickness but perpendicular to the other one.
+\end{itemize}
+Using this two stage sample, we get something similar to $\Lambda_x$ providing new data such as $Q_{oi}$ and $Q_{ei}$, namely the number of particles captured by the odd and even quadrats within the \textit{i}th stripe respectively. This means that $Q_i=Q_{oi}+Q_{ei}$ is the number of particles captured by all quadrats within the \textit{i}-th stripe, therefore $Q=\sum_{i=1}^n Q_i$. As a result, a variance predictor for $\widehat{N}$ can be obtained as follows,%Importante lo de []
+\begin{equation*}
+    Var(\widehat{N}) = \frac{\alpha(0,\tau)}{\tau^4}\cdot [3(C_0-\widehat{\nu}_n) - 4C_1 + C_2] + \frac{\widehat{\nu}_n}{\tau^4}, \hspace{2mm} n\geq 3
+\end{equation*}
+where $\tau = t/T \in (0,1]$,
+\begin{equation*}
+    C_k = \sum_{i=1}^{n-k}Q_i Q_{i+k}, \hspace{2mm} k=0,1,2,
+\end{equation*}
+\begin{equation*}
+    \widehat{\nu}_n = \sum_{i=1}^n Var(Q_i) = \frac{(1-\tau)^2}{3-2\tau} \cdot \sum_{i=1}^n (Q_{oi}-Q_{ei})^2
+\end{equation*}
+and
+\begin{equation*}
+    \alpha(0,\tau) = \frac{1}{6}\cdot \frac{(1-\tau)^2}{2-\tau}.
+\end{equation*}
+\textbf{Note:} This variance predictor must first be evaluated for a given direction of the stripes, and then for the perpendicular direction. The \textit{real variance predictor} is the average of both results (\cite{SterThAppl-2022-07-21.pdf}).
+
+
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%Teoría sobre IA
+\section{Artificial Intelligence Theory}
+%Introducción general
+%Problemas canónicos de ML %S02 Data Mining
+Artificial Intelligence encompasses every method that tries to create a system that behaves as a human, this includes both of what we called \textit{true AI} and \textit{not true AI} in section \ref{121}. On the other hand, \textit{true AI} encompasses every method that gives computers the capability to learn without being explicitly programmed, which is what we call Machine Learning. This is the essential reason why Machine Learning remained as a subset of Artificial Intelligence.
+Machine Learning methods can be grouped depending on their associated \textit{canonical problem}:
+\begin{itemize}
+    \item Clustering (Discrete Unsupervised Learning).
+    \item Dimensionality Reduction (Continuous Unsupervised Learning).
+    \item Classification (Discrete Supervised Learning).
+    \item Prediction (Continuous Supervised Learning).
+    \item Association (Association rules).
+\end{itemize}
+These problems can be differentiated because of their application to continuous or discrete problems, and because of the type of results/outputs to be obtained, depending on whether it requires human intervention to analyze the results (supervised) or not (unsupervised). Human intervention is needed in supervised learning because there is a target variable $Y$ which is inferred from a set of input variables $X$.
+%%DomingoMaster: Otro cambio minimo.
+On the contrary, unsupervised learning does not need human intervention because of its exploratory nature, as the $X$ variables are used to directly extract knowledge from the data. The lack of a clear target makes it unnecessary to output values because it is impossible to correct them as in the supervised case.
+One can also talk about reinforcement learning, a type of learning that is somewhere in between supervised and unsupervised learning. Essentially, the reinforcement learning algorithm receives rewards or punishments depending on the actions performed and its consequences, trying to learn from experience (trial-and-error learning) in it's way to maximize the rewards it obtains. However, it doesn't matter what type of canonical problem we try to solve, all the methods developed to solve it can behave very poorly depending on how we decide to manage the training process.\\
+
+
+%Hablar sobre overfitting y CV
+Different methods may use different models inside their algorithms, but when one increases the model's complexity (i.e. number of parameters) the training process can result in overfitting. Overfitting occurs when the model is so complex that training makes it very precise, predicting almost perfectly all of the results in the training dataset. At first, having almost perfect predictions may seem like a good thing, however, those predictions result to be good only for the data in the dataset used for training. Therefore, the overfitted model gives "good predictions" for data in the training dataset, but gives poor predictions for real data. When a model predicts training data very well but real data very poorly, it is said that the model has bad generalization properties. The most important thing about a model is it's ability to generalize since we want to use the model with real data, and overfitting deteriorates the generalization capabilities of the model. To avoid overfitting, a method called cross-validation is used while training.\\
+
+Cross-validation consists of dividing the dataset into two parts, the training dataset (containing the majority of the dataset, typically around 75\%) and the testing dataset (containing the rest of the dataset). The training dataset, as its name implies, is used to train the actual method we initially wanted to try. On the other hand, the testing dataset is used to test/evaluate the predictions of the model with data from outside the dataset that is being used to train. The train error of the model, namely the quality of the predicted results for the training dataset, will be lower the more the model is trained (this is what causes overfitting), however, the test error, namely the quality of the predicted results for the testing dataset ("real data"), will lower only until the model starts to overfit. Once the model starts to overfit, the test error begins to raise as a consequence of the model not generalizing well for "real data". Thus, the model reaches it's best generalization at the moment the test error starts to raise. It needs to be noted that the opposite of overfitting, called underfitting, should be avoided as well. For that reason, one has to set certain restrictions/thresholds so as to make sure the test error in not raising in a random iteration of the training process. One way to establish when the training of a model should stop is to establish a maximum threshold for the error difference between the train error and the test error, if the difference is higher than the threshold the training process should stop. Now that we've covered the basics of AI theory, we will unfold a more Neural Network focused theory.\\ %S02 Data Mining
+
+
+\subsection{Deep Learning}
+%Problemas "canonicos" de DL
+As we mentioned in Chapter \ref{cap:Intro}, Neural Networks reside in a subset of Machine Learning called Deep Learning. Similarly to what happens with Machine Learning methods, Neural Networks (which are methods by themselves) can be grouped depending on their associated problems. For Neural Networks, we have the following problems:
+
+\begin{itemize}
+    \item Input-Output Supervised problems.
+    \item Input-Input Supervised problems.
+    \item Memory Supervised problems.
+    \item Supervised and Reinforced problems.
+    \item Unsupervised problems.
+    \item Unsupervised/Self-Supervised Learning (Autoencoders).
+\end{itemize}
+%Networks de cada problema (+ desarrollo autoencoders) %S02/S08 ML1
+Different Neural Network structures have been developed to solve these problems. Input-output supervised problems, where pairs $(x,y)$ for variables $X$ and $Y$ are provided, are solved using Multilayer Networks, or Feedforward Nets. These networks have several layers connected (input-hidden-output).
+
+%IMAGENES EN IntroML1 y S08 (autoencoders)
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=90mm, height=60mm]{Figuras/MultilayerNN.png}\par
+    \caption{Multilayer Neural Network scheme. Input, hidden and output layers are shown, as well as the connections between neurons from each layer.}
+    \label{fig:MultilayerNN}
+  \end{center}
+\end{figure}
+
+They are typically used with images, pattern recognition, interpolation and fitting. An input is given and an output is predicted using the backpropagation algorithm.\\
+
+Input-input supervised problems, where pairs $(x,x)$ for the same variable $X$ are provided, are solved using Autoassociative memories (Hopfield). These networks have a single layer with lateral delayed connections.
+
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=90mm, height=60mm]{Figuras/AutoassociativeNN.png}\par
+    \caption{Autoassociative memories scheme. It has only one layer, working as input, hidden and output at the same time. Lateral connections between nodes can be seen.}
+    \label{fig:AutoassociativeNN}
+  \end{center}
+\end{figure}
+
+They are typically used with images, pattern recognition and memory tasks. An input is given and an another input is received using the Hebbian learning.\\
+
+Memory supervised problems, where pairs $(x,y)$ for variables $X$ and $Y$ are provided, are solved using Recurrent Networks, or Elman/Jordan nets. These networks are Multilayer Networks with hidden/output delayed lines.\vspace{5cm}
+
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=90mm, height=60mm]{Figuras/RecurrentNN.png}\par
+    \caption{Recurrent Networks scheme. Input, hidden and output layers are shown, as well as the connections between neurons from each layer.}
+    \label{fig:RecurrentNN}
+  \end{center}
+\end{figure}
+
+They are typically used with video, time series analysis, natural language tasks, interpolation and fitting. An input is given and an output is predicted using the backpropagation algorithm over the time.\\
+
+Unsupervised problems, where only the $X$ variable is provided, are solved using Competitive Networks. These networks are Multilayer Networks with lateral connections in the last layer.
+
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=90mm, height=60mm]{Figuras/CompetitiveNN.png}\par
+    \caption{Competitive Network scheme. For this one, two layers are shown, with the last one having lateral connections between its neurons.}
+    \label{fig:CompetitiveNN}
+  \end{center}
+\end{figure}
+
+They are typically used for segmentation and feature extraction tasks. An input is given and clusters are provided using the ad-hoc or winner-takes-all algorithms.\\
+
+Finally, we have Unsupervised/Self-Supervised Learning, solved using Autoencoders. Autoencoders are similar to Multilayer Networks, however, when constructing an autoencoder one doesn't really think about input-hidden-output layers, but more about encoder-decoder layers. This is because autoencoders have one specific task, learn a compressed representation of the input data (encoder) and how to reconstruct the input after having compressed it (decoder). \vspace{5cm}
+
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=120mm, height=50mm]{Figuras/Autoencoder.png}\par
+    \caption{Autoencoder scheme. Several layers are shown. First layers conform the encoder, compressing the input data. Last layers conform the decoder, decompressing the compressed data.}
+    \label{fig:Autoencoder}
+  \end{center}
+\end{figure}
+
+Also, there are different autoencoder types, such as Variational Autoencoders, but they are usually normal Autoencoders with added constraints.\\
+
+%Deep Learning que es? %S04 ML1
+``Deep'' Learning does not refer to a deeper understanding of the data, but to learning successive layers of increasingly meaningful representations. The amount of network layers is referred to as the model depth, the more layers the model has the more representations can be studied and the more deep the model is. Contrary to what happens with Machine Learning, where specific representations of the data have to be obtained prior to training, with Deep Learning these representations or characteristics of the data are obtained without the need to perform previous transformations to the data. In general, Deep Learning has better performance as well, however, one has to be careful, as the Deep Learning models can overfit as well. Therefore, Cross-Validation has to be applied to Neural Networks when learning from data, similarly to what happens in Machine Learning.\\
+
+Before going over theory related to Neural Network layers and training techniques we will cover the last few important aspects of Neural Networks: the model parameters, the activation functions, the loss function and the learning algorithm.\\ 
+
+In Chapter \ref{cap:Intro} we introduced the notion of node (neuron) weights and biases. Weights are values used to add more or less relevancy to a certain neuron. Neurons with weight values closer to zero will have less impact on the next connected neuron and vice versa. Each neuron has different weight values for each different connection with other neurons. Also, each connection has its own bias, somewhat affecting the information transmitted to the next neuron via the linear combination of nodes and node weights. As a result, many weights and biases are employed to create a Neural Network, greatly increasing the amount of model parameters. Since weights and biases are the model's parameters, when we train we are updating their values. In general, weight and bias values are randomly initiated for the first iteration of the training process (unless the training wants to be approached in a specific manner).\\
+
+The notion of activation function was also introduced in Chapter \ref{cap:Intro}. An activation function, $f$, is a non linear function applied to the transmitted linear combination of node and weight values, plus the bias ($f( \omega^T x + b )$, where $\omega$ is a vector of weight values, $x$ is a vector of node values and $b$ is a bias). These functions need to have easy derivatives, since computers don't know how to derive a function. Also, the derivative values of these activation functions are important, since higher derivative values imply a faster learning rate. Note that a faster learning rate is not always better, a slower or faster learning rate may be preferred depending on the type of problem since the Neural Network may or may not get stuck on local minima depending on this rate, respectively. However, low derivative values are not ideal when considering several layers since low values will be multiplied several times, giving gradient values so low that the Network won't learn (vanishing gradient problem). As a result, the choice of the activation functions is very important for Deep Learning since one may typically want a big amount of layers. One of the usual choices for the activation functions is ReLu ($f(z) = \max\{0,z\}$
+%, where $z= \omega^T x + b$
+) or one of its variants, as the gradient descent problem is avoided and learning is faster and less computationally expensive. However, ReLu shall not be used with Networks with a high amount of negative values since it outputs a value of zero when the input is negative, making gradients stop propagating and weights not being updated, which may cause a big part of the Network to stop learning. Different ReLu variants have been developed to target some of the ReLu problems. Another important activation function we should mention is the Softmax activation function ($g_i( z ) = \frac{\exp{z_i}}{\sum_{j=1}^{n}{\exp{z_j}}}$, where $z = (z_1, ..., z_n)$), since it is the go to activation function for the output layer in multiclass classification problems.\\
+
+Now we will introduce the Neural Network concept of loss function. The loss function is the function the learning algorithm uses in order to check how similar the predicted results are to the real results, later updating the model's parameters accordingly. There are several different loss functions but they are all used in a similar manner. The ultimate goal is to minimize the loss function as a way to close the gap between the predicted and the real output values, meaning trying to obtain predicted values that are as similar as possible to the real output values for each sample in the training dataset. For example, for regression tasks one may use the following loss function: $L(y,\hat{y}) = - ( y \log{\hat{y}} + (1-y) \log{(1-\hat{y})} )$; where $y$ is the real output value and $\hat{y}$ is the predicted output value, whereas for multiclass classification a more general version called Cross-Entropy may be used: $L(y,\hat{y}) = - \sum_j{y_j \log{\hat{y}_j}}$; where $y$ and $\hat{y}$ are now vectors and the sum is made over the number of total categories in the dataset.\\
+
+Finally, we will briefly talk about the learning algorithms. The most typical and basic Neural Network learning algorithm is called backpropagation. Most learning algorithms are variants of this backpropagation algorithm, so we will explain how it works to finish the explanation of the basic theory of Artificial Intelligence. As we mentioned previously, the model's parameters are randomly generated for the first iteration of the training process. Therefore, the Neuronal Network can already obtain its first predicted output values and compare them with real values using the loss function. Now is when the backpropagation algorithm is used. Backpropagation checks how much every neuron contributed to each of the predicted outputs and modifies their weights accordingly based on their respective \textit{gradient descent} values, namely based on the direction of the error gradient. Because this algorithm proceeds starting from neurons in the output layer and finishing with neurons in the input layer, the name backpropagation was associated to it. If we express this mathematically, we basically have an error function $$ E(\omega) = \frac{1}{2} \sum_{i,p}{(y_i^p - \hat{y_i^p})^2} , $$
+where the sum is made over each output neuron $i$ and each sample $p$ of the training dataset, whose gradient is used to update the model's weights as $ \omega_{i,j}(t+1) = \omega_{i,j}(t) - \eta \frac{\partial E}{\partial \omega_{i,j}(t)} $, where $i,j$ is used to denote the neuron $i$ in the layer $j$, $t$ is used to denote the iteration the training process is in and $\eta$ is the learning rate we decide to set for the backpropagation algorithm. A similar process to that used with weights is then used for biases, where instead of $\omega$ we use $b$ in the equations above to obtain the updated biases. There are other versions of this backpropagation algorithm that try to improve or add a bit more complexity to the learning process, such as those which include inertia and regularization terms. However, we won't be explaining them in this work.\\
+
+As a result, the Neural Network training process consists on a loop where we obtain predicted output values, update the model's parameters based on the prediction, and repeat.\\
+
+%Funcionamiento de capas/tecnicas %S04/S05/S06 ML1
+\subsection{Neural Network Layers/Techniques}
+There are several different Neural Network layers and training techniques that one can use when developing the structure of a Neural Network. We will start showing some of the techniques used for training and finish explaining how certain Neural Network layers are used.\\
+
+First we have regularization techniques. There are different types of regularization, but they all want to achieve the same thing, obtain lower variance values. For example, L2 regularization adds the term $\frac{\lambda}{2p}\norm{\omega}^2$ to the loss function, where $\lambda$ is the regularization parameter, making weights as small as possible and thus creating a less complex network, trying to reduce overfitting in the process.\\ 
+
+We also have Dropout regularization, which simplifies the network by activating or deactivating a neuron with a certain set probability every time the network passes by that neuron, making it so there is not a neuron that's over-specialized, and thus trying to avoid a network that depends on a certain neuron to work properly.\\
+
+Another type of regularization is Data Augmentation, which modifies original data in order to obtain new data, making it able to train with a bigger amount of data. More types of regularization exist, but we won't be mentioning them.\\
+
+Some other techniques include Batch Gradient Descent, which updates the parameters after the whole dataset has been iterated, Mini-Batch Gradient Descent, which updates the parameters after each small group of dataset subdivisions is iterated, Stochastic Gradient Descent, which updates the parameters after each sample in the dataset is used, Input Normalization, which normalizes input data, Batch Normalization, which normalizes the data in each mini-batch separately, Gradient Descent With Momentum, which uses the gradient's exponential moving average to update the parameters, etc. Furthermore, some optimization algorithms with good generalization properties have been developed, such as RMSProp and Adam Optimization, which update the parameters in different ways.\\
+
+Finally, we will talk about Neural Network layers. They are mostly used in the field of Computer Vision, which is somewhat of what Crowd Counting is about. We can differentiate between Dense Neural Networks and Convolutional Neural Networks (ConvNets). More type of Neural Networks exist, such as Residual Neural Networks, which train the network in a ``normal'' way but every certain amount of layers additionally train using residual information from past layers, however, we won't cover them. Dense Neural Networks (which are the ones we have been using so far for the theory) learn global patterns from the input feature map, they use every pixel in an image. ConvNets learn local patterns, they search in small windows (filters) of the image in 2D. What's more, ConvNets learn patterns that are translation invariant, learn the spatial hierarchy of images, are very efficient for processing images and need less images to train as they have a greater generalization power. For these reasons, ConvNets are mostly used in the field of Computer Vision.\\
+
+First of all, we have Convolutional Layers. Images have a size in pixels, $n \times m$. Input layers need to have the same amount of neurons as the total number of pixels in the image, $n \cdot m$, however, when Neural Networks are used with images we usually represent layers as rectangles with neurons distributed as pixels in an image. Convolutional Layers are groups of ``filters'' of the image that take snips of size $a \times b$ (where $a< n$ and $b<m$ are the amount of neurons/pixels each side of the snip has, having $a \cdot b$ neurons/pixels in total per snip) and transmit all of the information in those $a \times b$ neurons/pixels to the corresponding neuron in each filter. Each filter, also named \textit{kernel}, is specialized in one task, thus, the more filters the more characteristics the Neural Network can identify.\vspace{5cm}\\
+
+\begin{figure}[h!]
+  \begin{center}
+    \includegraphics[width=120mm, height=60mm]{Figuras/ConvLayer.png}\par
+    \caption{Convolutional Layer scheme. The process of selecting a $5\times 5$ snip of the image and transmitting its information into a single neuron is shown for one filter.}
+    \label{fig:ConvLayer}
+  \end{center}
+\end{figure}
+
+Lastly, we have some techniques used with Convolutional Layers that may be described by some people as Neural Network Layers. We won't consider them as such because there are no parameters to be learned when using them. First we have Padding. Convolutional layers can make the image greatly decrease in size. Thus, constantly applying layers may make the image too small. Also, information in the pixels located at the corner of the image are underrepresented in the feature maps. Padding consists of adding a ``frame'' with a width of $r$ pixels surrounding the image in order to avoid these problems. When Padding is not used one may call it ``Valid'' Convolution. If the Padding is applied until the input and output have the same size one may call it ``Same'' Convolution. Next we have Strided Convolution. This consists of moving the snips in steps of $s$ pixels instead of moving it in steps of 1 pixel. Lastly, we have Pooling. Pooling is used to reduce the dimensionality of the feature map of the image. It splits the feature map into groups with the same size $d \times d$ and then applies a specific function to each group, creating a new layer with only one value per group. Some other techniques are used to go from the convolutional part to the classification part of a network, like Flatten, which puts all layers into a single flattened array (vector), or Global Average Pooling, which uses Pooling to reduce the layers into a single pixel. There may be more techniques out there, but we have covered the more basic ones.\\
+
+%Sliding window
+There is, however, one slightly more complex technique that we will mention because it is used during the execution of our Crowd Counting model, the Sliding Window Technique. Simply put, it consists of creating a small window of fixed size in the top-left corner of the image and sliding that window across the image systematically. For each window position the model is used within the window part of the image, obtaining the results and lastly combining them. It should be mentioned that the sliding is done in such a way that the whole image could be recreated by setting the windows side to side. However, in some cases there may be an overlap between nearby windows to ensure that no details are missed. There are several versions of the Sliding Window Technique, but we only want to give you an idea of how it works, so no further details will be provided\footnote{(\url{https://supervisely.com/blog/how-sliding-window-improves-neural-network-models/})}.\\ %(\cite{sliding}).
+%CREE UNA CITA PARA ESTA URL PERO SUPONGO QUE EL FOOTNOTE ES MEJOR (COMO PUSISTE PARA kdnuggets EN LA INTRO
+
+
+It is worth mentioning that the most general structure of Convolutional Neural Networks consists of alternatively using Convolutional Layers and Pooling until we have many feature maps with low spatial size. Then, the last feature maps are flattened and Dense Layers are applied until it obtains the output. After that, softmax would be applied it we were doing classification.\\
+
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%Problemas de la IA en detección de personas
+%%DomingoMaster: Suena fuerte.
+\subsection{Challenges in Crowd Counting}
+There are several challenges concerned with automatic estimation of the number of individuals in images or videos. We will go over some of them and establish what CLIP-EBC does to try and solve those issues.\\
+
+We will start off with classification-based methods. Classification-based crowd-counting methods have inappropriate discretization strategies which impede the application of CLIP and lead to suboptimal performance. Another limitation of classification-based methods is their sole focus on the classification error without considering the proximity of predicted count values to the ground truth (the ``real'' results). This compromises performance in testing, as two probability distributions with identical classification errors may exhibit different expectations (\cite{CLIP}).\\
+
+State-of-the-art crowd counting methods use training images with dot annotations of individuals' head centers, but they train with a density map estimation, losing the individuals' precise location. Also, since the training images are sparse binary matrices and density maps are dense real-valued matrices, a function defined based on the pixel-wise difference between the annotated and predicted density maps is hard to train because the reconstruction loss is heavily unbalanced between the 0s and 1s in the sparse binary matrix. To alleviate this problem each annotated dot is turned into a Gaussian Blob using Gaussian kernels, however, the performance of the resulting network is highly dependent on the quality of this ``pseudo ground truth'', plus, using Gaussian kernels exacerbates the noise during the annotation process. Moreover, this arises two major problems: 
+\begin{itemize}
+    \item First, given that individuals are often depicted at different scales in images due to perspective distortion, an ideal scenario would involve matching kernel widths with head sizes, which are not provided for counting tasks. Thus, we need to set the kernel widths for each annotated dot to construct the likelihood function using the Gaussian kernels. If the kernel size is set too small, pixels corresponding to individuals' heads are set to 0 in the density map. Conversely, if the kernel size is too large, pixels corresponding to the background can be mistaken as pedestrians. % To address this issue, Wang et al.[6] introduce the DMCount loss by leveraging the discrete optimal transport theory. This loss function does not require Gaussian smoothing and models trained with it can have enhanced performance.
+    \item Second, the loss corresponds to an underdetermined system of equations with infinitely many solutions.
+\end{itemize}
+Gaussian smoothing also transforms the initially discrete count values into a continuous space $[0,\infty)$, needing to use a sequence of bordering real-valued intervals $(a,b]$ as bins, which makes samples near the borders challenging to classify, thus making it difficult for models to learn optimal decision boundaries.
+Furthermore, methods that use this approach assume the crowd is evenly (uniformly) distributed, when in reality crowd distribution is quite irregular. All of this hurts generalization performance, specially struggling with high-density images (\cite{CLIP},\cite{DMCount},\cite{FGENet}).\\
+
+A majority of these methods adopt an encoder-decoder framework, aiming to directly regress the density maps. They typically output density maps with reduced spatial sizes determined by a reduction factor. Each element in the density map estimates the count value in a corresponding block of the image. However, these methods overlook that count values exhibit a long tail distribution, where areas with large values are severely undersampled. To address this challenge some methods (such as CLIP-EBC) turn crowd counting into a classification task by merging count values into bins (classes), therefore, the sample sizes of rare values can be increased. These methods are also based on blockwise prediction but output probability maps of reduce spatial sizes, where the vector at each spatial location represents the probability scores over the bins. The predicted density map is calculated by aggregating mean values of bins, each weighted according to the associated probability score. The final predicted count is then derived by integrating the resulting density map (\cite{CLIP}).\\
+
+Point frameworks can solve issues caused by the density map framework, but they cannot avoid the noise issue introduced in the annotation process. Both label noise and missing mark can ruin the quality of ground truth introducing inaccuracies and inconsistencies in the ground truth data, thus impeding the accurate estimation of crowd counting. Moreover, the preservation of fine-grained information remains a critical concern (\cite{FGENet}).\\
+
+As a result, CLIP's capability to count has to deal with two primary challenges:
+\begin{itemize}
+    \item The inherent mismatch between CLIP, designed for recognition, and counting, which is a regression task.
+    \item The limitations and suboptimal results of existing classification-based counting methods.
+\end{itemize}
+The EBC framework was specifically designed to address the challenges faced by classification-based methods, relying on integer-valued bins that facilitate the learning of robust decision boundaries. However, with few modifications, regression-based methods can be integrated into the EBC framework, enhancing their performance (\cite{CLIP}).\\
+
+Finally, it is worth mentioning some of the problems that every Neural Network has to face when dealing with crowd counting problems:
+\begin{itemize}
+    \item Diversity: The huge diversity in individuals' appearances and their assemblies. This includes poses, view-points and illumination variations within the crowd and across crowd images.
+    \item Scale: The extreme scale and density variations in crowds. This includes the variations in head sizes due to perspective distortion.
+    \item Resolution: Limited context to discriminate people in feature maps with higher resolution. For example, patterns formed by leaves, structures of buildings, cluttered backgrounds, etc. may resemble a formation of people in high-density crowd scenarios.
+    \item Data imbalance: The presence of a majority of images with certain characteristics and few images with different characteristics to that of the latter ones can cause problems while training.
+    \item Local minima: Training with higher resolutions increases the chances of optimization being stuck in local minima, leading to suboptimal performance, especially with diverse crowd data.
+\end{itemize}
+(\cite{LSC-CNN}).
+
+
+
+%COSAS DE LAS QUE HABLAR AL MENCIONAR PROBLEMAS
+%VGG-16 convolution layers for better crowd feature extraction. (LSC-CNN)
+%no creo que lo incluya, creo que no se usa
+
+
+
+
+
+%Funcionamiento del modelo
+\subsection{The CLIP-EBC Model}
+%QUIZAS DEBERIA INCLUIR VARIAS IMAGENES DE CLIP, SON MUY BUENAS
+The Contrastive Language-Image Pre-training (CLIP) model has demonstrated outstanding performance in tasks such as zero-shot image classification and object detection, however, there are only a few studies in crowd counting that use CLIP. Nonetheless, crowd counting methods that use CLIP are either not able to generate density maps or rooted in density-map regression, leading to suboptimal performance in crowd counting tasks. CLIP-EBC is the first fully CLIP-based crowd-counting model capable of generating density maps. In this subsection we will summarize the procedure used in \cite{CLIP}. For more details about the CLIP-EBC model head over to their paper.\\
+
+\subsubsection{Enhanced Blockwise Classification}
+The EBC framework resorts to blockwise prediction using a probability map $\mathbf{P}*$ to predict the density map $\mathbf{Y}*$ at the pixel level, in spite of the inherent noise present in point labels. However, contrary to regression-based methods (which suffer from undersampling of large count values), EBC groups count values into bins to increase the sample size of each bin, alleviating the sample imbalance problem. As a result, let $\{ \mathcal{B}_i \hspace{2mm} |\hspace{2mm} i=1, ... ,n;\hspace{2mm} \mathcal{B}_i \cap \mathcal{B}_j \hspace{2mm} \forall i \neq j;\hspace{2mm} \mathcal{S} \subset \cup_{i=1}^{n} \mathcal{B}_i \}$ be the $n$ pre-defined bins, where $\mathcal{S}$ is the support set of count values. For an image $\mathbf{X} \in \mathbb{R}_{+}^{C\times H\times W}$, where $C$ represents the number of channels and $H$ and $W$ represent the spatial height and width of the image respectively, the predicted density map can be obtained as follows:
+$$ \mathbf{Y}_{i,j}^* = \sum_{k=1}^{n} a_k \cdot \mathbf{P}_{k,i,j}^* , $$ where $a_k$ is a representative count value, the probability map $\mathbf{P}^*$ has dimensions $(n, H//r, W//r)$, where $//$ represents the floor division operator, and $\mathbf{P}_{:,i,j}^*$ denotes the probability scores of the bins in the region $(r(i-1):ri, r(j-1):rj)$ of the image. Summing over $\mathbf{Y}_{i,j}^*$ would result in the predicted count for the whole image.\\
+
+With respect to the Gaussian smoothing issues, EBC bypasses Gaussian smoothing and adopts a YOLO-like approach. If an individual is within a specific block, EBC compels only that block to predict the presence of that individual while excluding other blocks from making such predictions. This strategy helps preserve the inherent discreteness of the count. Furthermore, three bin strategies of varying granularity can be used: \textit{fine} (each bin contains one integer, providing bins with the lowest biases), \textit{dynamic} (creates bins of various sizes, considering small count values as individual bins and combining every two for larger count values), and \textit{coarse} (each bin comprises more than one integer, acknowledging the long-tail distribution of count values and increasing sample sizes of each bin). In \cite{CLIP} it was shown that, in general, dynamic granularity provides the best performance (as it achieves a good balance between reducing biases in count values and increasing sample sizes), followed by fine granularity and lastly coarse granularity. Also, to account for the representative count values not following a uniform distribution, EBC uses the average count values in each bin as the representative point:
+$$ a_i = \frac{1}{\abs{\mathcal{B}_i}} \sum_{k=1}^{M}{\mathbbm{1}(c_k \in \mathcal{B}_i) \cdot c_k} , $$
+where $\abs{\mathcal{B}_i}$ is the cardinality of the bin $\mathcal{B}_i$, $M$ is the number of all blocks in the dataset, $\mathbbm{1}$ is the indicator function and $c_k$ is the count value in block $k$.\\
+
+What's more, annotations within densely populated image areas can be exceedingly erroneous and noisy, giving models incorrect backpropagation signals and degrading their performance. EBC proposes to constrain the maximum count of observable people in fixed-size image patches to a small constant determined by the patch size. Specifically, it posits that the minimum recognizable size for a person is $l \times l$ pixels, thus, the maximum allowable count value is $\mathcal{M} = (r//l)^2$, where $r$ is a model-related reduction factor.\\
+
+%Funciones de pérdida
+When it comes to the Neural Network loss function, EBC uses the Distance-Aware-Cross-Entropy (DACE) loss proposed in \cite{CLIP}:
+\begin{eqnarray}\label{loss}
+\mathcal{L}_{DACE} & = & \mathcal{L}_{class}(\mathbf{P}^*,\mathbf{P}) + \lambda \mathcal{L}_{count}(\mathbf{Y}^*,\mathbf{Y}) \\
+             & = & - \sum_{i=1}^{H//r}\sum_{j=1}^{W//r}\sum_{k=1}^{n} \mathbbm{1}(\mathbf{P}_{k,i,j} = 1) \log{\mathbf{P}_{k,i,j}^*} + \lambda \mathcal{L}_{count}(\mathbf{Y}^*,\mathbf{Y}),
+\end{eqnarray} 
+where $\mathbf{P}$ is the one-hot encoded ground-truth probability map, $\mathbf{P}^*$ is the predicted probability map, $\mathbf{Y}$ is the ground-truth density map, $\mathbf{Y}^*$ is the predicted density map and $\mathcal{L}_{count}$ is the loss count function weighted by $\lambda$. The loss count function can be any function that measures the difference between two density maps. This framework (EBC) uses the DMCount Loss function [\cite{DMCount}] since the ground truth is not Gaussian smoothed (thus, avoiding Gaussian kernel's problems).\\
+
+\subsubsection{The Structure of CLIP-EBC}
+The image encoder of CLIP-EBC includes a feature extractor and a $1\times 1$ Convolutional Layer. As the model is based on blockwise prediction, the final pooling layer and linear projection layer are removed. The remaining backbone is used to extract the feature map instead. After that, it employs a $1\times 1$ Convolutional Layer to transform the feature map into the CLIP embedding space, yielding the image feature maps.\\
+
+For the text feature extraction, CLIP-EBC generates one text prompt for each bin according to the following rules:
+\begin{itemize}
+    \item If the bin has only one count value $q$ such that $q<\mathcal{M}$, the text prompt is: ''There is/are $q$ person/people´´.
+    \item If the bin has more than one element, let $u,v$ denote the minimum and maximum values of the bin, respectively. Then the text prompt is: ''There is/are between $u$ and $v$ person/people´´.
+    \item If the bin has only one count value $q$ such that $q=\mathcal{M}$, the text prompt is: ''There are more than $\mathcal{M}$ people´´.
+\end{itemize}
+Subsequently, the resulting $n$ text prompts are tokenized by CLIP's tokenizer, the tokenized text is set as input in the CLIP text encoder and the text features are yielded.\\
+
+With the image feature maps and text features CLIP-EBC can then obtain the probability map $\mathbf{P}^*$. First, it calculates the cosine similarity between the image feature vector in a set position of the image and the $n$ extracted text features.  %dimensiones mal? %???????????????????????????????????????????????????????????????
+Next, similarities are normalized using softmax to obtain the probabilities $\mathbf{P}_{:,i,j}^*$. Finally, the predicted density map is obtained using the equations mentioned above.\\
+
+
+
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%Integrar IA + Estereología
+\section{Combining AI and Stereology}
+%intro breve
+In this work we aim at combining a Crowd-Counting Neural Network model with the mathematical discipline of Stereology. As we mentioned, we are going to use the CLIP-EBC model for this purpose, however, the basis on which our estimation method is based can be adapted so as to be employed in a similar manner for many different models and problems.\\
+
+In order to explain how our estimation method works we will first introduce the notion of Quasi-Monte Carlo Integration and Optimal Point Sets. We will later see how these Point Sets can be used for the purpose of this project.\\
+
+
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+\subsection{Quasi-Monte Carlo Integration (QMC Integration)}
+%Forma de calcular las esperanzas a partir de sumas en vez de integrales. También objetivo de lo que se pretende (mejorar la eficiencia).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Samplings points in quasi-montecarlo integration method. (Hinrich.pdf) 
+% Spaces of functions (https://en.wikipedia.org/wiki/Reproducing_kernel_Hilbert_space). 
+% Error depending 
+
+One problem that has to be dealt with in order to compute a target measure estimate is the numerical integration of multivariate functions. This problem arises because of the need to obtain the expectation for the number of individuals in our estimation problem.\\
+
+To simplify things, lets normalize the integration domain to be the compact unit cube $[0,1]^d$, that is,
+\begin{equation*}
+    \int_{[0,1]^d} f(\textbf{x})\,\mathrm{d}\textbf{x} = \int_0^1 \cdot \cdot \cdot \int_0^1 f(x_1,...,x_d)\,\mathrm{d}x_1\ldots\mathrm{d}x_d
+\end{equation*}
+The goal is to approximate these integrals using \textit{QMC rules} with fixed integration nodes $\textbf{x}_0,...,\textbf{x}_{N-1} \in [0,1)^d$, namely
+\begin{equation} \label{QMC}
+    \int_{[0,1]^d} f(\textbf{x})\,\mathrm{d}\textbf{x} \approx \mathcal{Q}_{N,d}(f) := \frac{1}{N} \sum_{n=0}^{N-1} f(\textbf{x}_n).
+\end{equation}
+\vspace{2mm}
+
+The crux of this method is the choice of underlying nodes. What's more, we also need some global information on the functions to be integrated, since one can find two functions $f,g : [0,1]^d \longrightarrow \mathbb{R}$ such that $f(\textbf{x}_n) = g(\textbf{x}_n) \hspace{2mm} \forall n=0,1,...,N-1$, but $\int_{[0,1]^d} f(\textbf{x})\,\mathrm{d}\textbf{x} - \int_{[0,1]^d} g(\textbf{x})\,\mathrm{d}\textbf{x}$ can be any number. So as to avoid this problem, function classes with certain smoothness properties are considered.\\
+
+Lets start with \textit{univariate QMC integration}, namely QMC integration of univariate real valued functions $f:[0,1] \longrightarrow \mathbb{R}$ with continuous first derivative on $[0,1]$. From the \textit{fundamental theorem of calculus} we have
+\begin{equation*}
+    f(x) = f(1) - \int_x^1 f'(y)\,\mathrm{d}y, \hspace{2mm} \forall x \in [0,1].
+\end{equation*}
+For the error of a QMC rule based on sample nodes $\mathcal{P}=\{ x_0,...,x_{N-1} \} \subset [0,1)$ we then get
+\begin{multline*}
+    e(f,\mathcal{P}) = \int_0^1 f(x)\,\mathrm{d}x - \frac{1}{N} \sum_{n=0}^{N-1} f(x_n) = -\int_0^1 \int_x^1 f'(y)\,\mathrm{d}y \,\mathrm{d}x + \frac{1}{N} \sum_{n=0}^{N-1} \int_{x_n}^1 f'(y) \,\mathrm{d}y \\
+    = -\int_0^1 \int_0^y f'(y)\,\mathrm{d}x \,\mathrm{d}y + \int_0^1 \frac{1}{N} \sum_{n=0}^{N-1} 1_{(x_n,1]}(y) f'(y) \,\mathrm{d}y = \int_0^1 f'(y) \Bigg[\frac{1}{N} \sum_{n=0}^{N-1} 1_{(x_n,1]}(y) - y\Bigg] \,\mathrm{d}y
+\end{multline*}
+Since the number of indices $n\in \{ 0,...,N-1 \}$ for which $x_n \in [0,y)$ is
+\begin{equation*}
+    \sum_{n=0}^{N-1} 1_{(x_n,1]}(y) = \sum_{n=0}^{N-1} 1_{(0,y]}(x_n)
+\end{equation*}
+we find that
+\begin{equation*}
+    \frac{1}{N} \sum_{n=0}^{N-1} 1_{(x_n,1]}(y) - y = \Delta_{\mathcal{P},N}(y),
+\end{equation*}
+that is, the local discrepancy of $\mathcal{P}$ in $y$. Therefore,
+\begin{equation*}
+    e(f,\mathcal{P}) = \int_0^1 f'(y)\Delta_{\mathcal{P},N}(y)\,\mathrm{d}y.
+\end{equation*}
+
+Taking the absolute value and applying the \textit{triangle inequality for integrals} and the \textit{Hölder inequality} we get
+\begin{equation*}
+    \abs{e(f,\mathcal{P})} \leq \int_0^1 \abs{f'(y)} \abs{\Delta_{\mathcal{P},N}(y)} \,\mathrm{d}y \leq \left( \int_0^1 \abs{f'(y)}^r \,\mathrm{d}y \right)^{1/r} \left(  \int_0^1 \abs{\Delta_{\mathcal{P},N}(y)}^s \,\mathrm{d}y \right)^{1/s} \\
+    = \norm{f'}_{L_r} \norm{\Delta_{\mathcal{P},N}}_{L_s},
+\end{equation*}
+where $r,s \in [0,\infty]$ such that $\frac{1}{r} + \frac{1}{s} = 1$. For QMC integration of functions $f$ for which $\norm{f'}_{L_r} < \infty$, sample nodes $\mathcal{P}$ with low $L_s$ discrepancy $L_{s,N}(\mathcal{P}) = \norm{\Delta_{\mathcal{P},N}}_{L_s}$ should be chosen.\\
+
+\textbf{Note:}
+In order to develop a similar theory for multivariate functions, the notion of \textit{reproducing kernel Hilbert space} will be used.
+For an integrable function $f : [0,1]^d \longrightarrow \mathbb{C}$ and a point set $\mathcal{P} = \{\textbf{x}_0,...,\textbf{x}_N-1\} \subset [0,1)^d$, the notation:
+\begin{equation*}
+    e(f,\mathcal{P}) = \int_{[0,1]^d} f(\textbf{x}) \,\mathrm{d}\textbf{x} - \frac{1}{N} \sum_{n=1}^{N-1} f(\textbf{x}_n),
+\end{equation*}
+will be used in analogy to the univariate case. What's more, the inner product in a \textit{Hilbert Space} $\mathcal{H}$ will be denoted by $\langle \cdot,\cdot \rangle$ and the corresponding norm will be denoted by $\norm{\cdot} = \langle \cdot,\cdot \rangle^{1/2}$.\\
+
+
+Now lets give some useful definitions used with Hilbert spaces in order to develop a similar theory for multivariate functions.\\
+
+\begin{Def}
+    The \textit{worst-case error} of a QMC rule based on a point set $\mathcal{P} = \{\textbf{x}_0,...,\textbf{x}_N-1\} \subset [0,1)^d$ in a Hilbert space $\mathcal{H}$ of integrable functions on $[0,1]^d$ is defined as
+    \begin{equation*}
+        e(\mathcal{H},\mathcal{P}) = \underset{f \in \mathcal{H}, \norm{f}\leq 1}{\text{sup}} \abs{e(f,\mathcal{P})}.
+    \end{equation*}
+\end{Def}
+
+\vspace{2mm}
+Also, the notion of \textit{reproducing kernel} will be important for our purposes.\\
+
+\begin{Def}
+    A Hilbert space $\mathcal{H}$ of functions on $[0,1]^d$ is a \textit{reproducing kernel Hilbert space} on $[0,1]^d$ if there exists a function $K : [0,1]^d \times [0,1]^d \longrightarrow \mathbb{C}$ such that
+    \begin{itemize}
+        \item[K1:]\label{K1} $K(\cdot,\textbf{y}) \in \mathcal{H} \hspace{2mm} \forall \textbf{y} \in [0,1]^d$ 
+        \item[K2:]\label{K2} $\langle f,K(\cdot,\textbf{y}) \rangle = f(\textbf{y}) \hspace{2mm} \forall \textbf{y} \in [0,1]^d, \hspace{1mm} \forall f\in \mathcal{H}$.
+    \end{itemize}
+    The function $K$ is the \textit{reproducing kernel} of $\mathcal{H}$.\\
+\end{Def}
+
+\textbf{Note:} the reproducing kernel $K$ has been considered as a function of the first variable, denoted by $\cdot$, thus, in $\langle f,K(\cdot,\textbf{y}) \rangle$ the inner product is applied with respect to the first variable of $K$.\\
+
+
+Furthermore, reproducing kernels have the following properties.\\
+
+\begin{Corollary}
+    A function satisfying K1 and K2 is symmetric, uniquely defined and positive semi-definite, that is,
+    \begin{itemize} 
+        \item[K3:]\label{K3} $K(\textbf{x},\textbf{y}) = \overline{K(\textbf{y},\textbf{x})} \hspace{2mm} \forall \textbf{x},\textbf{y} \in [0,1]^d$ (symmetry) 
+        \item[K4:]\label{K4} If a function $\Tilde{K}$ satisfies K1 and K2, then $\Tilde{K} = K$ (uniqueness)
+        \item[K5:]\label{K5} For any $a_0,...,a_{N-1} \in \mathbb{C}$ and $\textbf{x}_0,...,\textbf{x}_{N-1} \in [0,1]^d$, we have $\sum_{m,n=0}^{N-1} \Tilde{a}_m a_n K(\textbf{x}_m,\textbf{x}_n) \geq 0$ (positive semi-definiteness) 
+    \end{itemize}
+\end{Corollary}
+\begin{proof} K3: $K(\textbf{x},\textbf{y}) = \langle K(\cdot,\textbf{y}),K(\cdot,\textbf{x}) \rangle = \overline{\langle K(\cdot,\textbf{x}),K(\cdot,\textbf{y}) \rangle} = \overline{K(\textbf{y},\textbf{x})} $.\\
+K4: $\Tilde{K}(\textbf{x},\textbf{y}) = \langle \Tilde{K}(\cdot,\textbf{y}),K(\cdot,\textbf{x}) \rangle = \overline{\langle K(\cdot,\textbf{x}),\Tilde{K}(\cdot,\textbf{y}) \rangle} = \overline{K(\textbf{y},\textbf{x}) = K(\textbf{x},\textbf{y})}$.\\
+K5: 
+\begin{multline*}
+    \sum_{m,n=0}^{N-1} \Tilde{a}_m a_n K(\textbf{x}_m,\textbf{x}_n) = \sum_{m,n=0}^{N-1} \Tilde{a}_m a_n \langle K(\cdot,\textbf{x}_n),K(\cdot,\textbf{x}_m) \rangle = \langle \sum_{n=0}^{N-1} a_n K(\cdot,\textbf{x}_n),\sum_{m=0}^{N-1} a_m K(\cdot,\textbf{x}_m) \rangle \\
+    = \begin{Vmatrix} \sum_{m=0}^{N-1} a_m K(\cdot,\textbf{x}_m) \end{Vmatrix}^2 \geq 0.
+\end{multline*} 
+
+This concludes the proof.
+\end{proof}
+
+\vspace{2mm}
+Additionally, a function $K$ satisfying K3 and K5 uniquely determines a Hilbert space of functions  for which K1, K2 and K4 hold. Whereby, it makes sense to speak of a reproducing kernel without specifying the corresponding Hilbert space.\\
+
+That being said, let $\mathcal{H}$ be a Hilbert space of integrable functions $f : [0,1]^d \longrightarrow \mathbb{C}$ equipped with inner product $\langle \cdot,\cdot \rangle$ and corresponding norm $\norm{\cdot} = \langle \cdot,\cdot \rangle^{1/2}$.\\
+
+\begin{Def}
+    A linear functional $T$ on $\mathcal{H}$ is \textit{bounded} if there exists $M<\infty$ such that $\abs{T(f)}\leq M$ for all $f$ with $\norm{f}\leq 1$.
+\end{Def}
+
+\vspace{2mm}
+Also, it is known that linear functionals boundedness is equivalent to continuity.\\
+
+Lets consider $e(\mathcal{H},\mathcal{P})$ (\textit{i.e.} the worst-case error of a QMC rule based on a point set $\mathcal{P}\subset [0,1)^d$ in $\mathcal{H}$). It's not clear if $e(\mathcal{H},\mathcal{P})$ is finite, that is to say, if the linear functional $e(\cdot,\mathcal{P})$ is continuous. However, conditions exist such that this is the case.\\
+
+Let $T_y$ be the linear functional that evaluates $f\in \mathcal{H}$ at $\textbf{y}\in [0,1]^d$, namely
+\begin{equation*}
+    T_y(f) = f(\textbf{y}) \hspace{2mm} \text{for } f\in \mathcal{H}.
+\end{equation*}
+$T_y$ is called the \textit{evaluation functional} in $y$. It turns out that if $T_y$ is continuous $\forall \textbf{y} \in [0,1]^d$, then so is every QMC rule. What's more, continuity of the evaluation functional is equivalent to the existence of a reproducing kernel.\\
+
+\begin{Th}
+    Let $\mathcal{H}$ be a Hilbert space of functions on $[0,1]^d$. $\mathcal{H}$ is a reproducing kernel Hilbert space on $[0,1]^d$ if and only if the evaluation functionals $$ T_y(f) = f(\textbf{y}) \hspace{2mm} \text{for } f \in \mathcal{H}, \textbf{y} \in [0,1]^d $$ are continuous.
+\end{Th}
+\begin{proof} $\Leftarrow)$ We assume that the evaluation functionals are continuous, therefore, the \textit{Fréchet-Riesz Representation Theorem} guarantees that, for every $\textbf{y}$, a uniquely determined function $k_y \in \mathcal{H}$ exists such that $$ T_y(f) = \langle f,k_y \rangle \hspace{2mm} \forall f \in \mathcal{H}.$$ Defining $K(\textbf{x},\textbf{y}) := k_y(\textbf{x})$ for $\textbf{x},\textbf{y} \in [0,1]^d$, properties K1 and K2 are satisfied by $K$, thus $\mathcal{H}$ is a reproducing kernel Hilbert space whose reproducing kernel is $K$.\\ 
+
+$\Rightarrow)$ Assume $K$ is a reproducing kernel for $\mathcal{H}$ and let $\textbf{y} \in [0,1]^d$. Using the Cauchy-Schwarz inequality, we get $$ \abs{T_y(f)} = \abs{f(\textbf{y})} = \abs{\langle f,K(\cdot,\textbf{y}) \rangle} \leq \norm{f} \norm{K(\cdot,\textbf{y})} \hspace{2mm} \forall f \in \mathcal{H}.$$
+Now, using K2 we have $\norm{K(\cdot,\textbf{y})}^2 = \langle K(\cdot,\textbf{y}),K(\cdot,\textbf{y}) \rangle = K(\textbf{y},\textbf{y})$, whereby $\abs{T_y(f)}\leq M := \sqrt{K(\textbf{y},\textbf{y})}$ for every $f$ with $\norm{f}\leq 1$. This means that $T_y$ is continuous, which concludes the proof. %Pregunta????
+\end{proof}
+
+\vspace{2mm}
+Continuing with the situation above, lets consider the integration functional $I(f) = \int_{[0,1]^d} f(\textbf{x})\,\mathrm{d}\textbf{x}$. If $\mathcal{H}$ has a reproducing kernel $K$, then for any $f \in \mathcal{H}$ with $\norm{f}\leq 1$ we have
+\begin{equation*}
+    \abs{\int_{[0,1]^d} f(\textbf{y}) \,\mathrm{d}\textbf{y}} = \abs{\int_{[0,1]^d} T_y(f) \,\mathrm{d}\textbf{y}} \leq \int_{[0,1]^d} \abs{T_y(f)} \,\mathrm{d}\textbf{y} \leq \int_{[0,1]^d} \sqrt{K(\textbf{y},\textbf{y})} \,\mathrm{d}\textbf{y}.
+\end{equation*}
+Therefore, if the reproducing kernel $K$ satisfies
+\begin{itemize}
+    \item[$\textbf{C}$:] $\int_{[0,1]^d} \sqrt{K(\textbf{y},\textbf{y})} \,\mathrm{d}\textbf{y} < \infty$,
+\end{itemize}
+then the integration functional $I$ is continuous.\\
+
+In conclusion, if $\mathcal{H}$ has a reproducing kernel $K$ that satisfies $\textbf{C}$, then function evaluation and integration are continuous linear functionals, and so is $e(\cdot,\mathcal{P})$ for any point set $\mathcal{P}$. What's more, under these conditions $e(\mathcal{H},\mathcal{P})$ is a well-defined finite number.\\
+
+A very important property for the error analysis follows.\\
+
+\begin{Lemma}
+    Let $\mathcal{H}$ be a reproducing kernel Hilbert space with reproducing kernel $K$ and inner product $\langle \cdot,\cdot \rangle$. If the mapping
+    \begin{equation*}
+        I(f) = \int_{[0,1]^d} f(\textbf{y}) \,\mathrm{d}\textbf{y} \hspace{2mm} \text{for } f\in \mathcal{H}
+    \end{equation*}
+    is a continuous linear functional on $\mathcal{H}$, then
+    \begin{equation*}
+        \int_{[0,1]^d} \langle f,K(\cdot,\textbf{y}) \rangle \,\mathrm{d}\textbf{y} = \langle f,\int_{[0,1]^d} K(\cdot,\textbf{y}) \,\mathrm{d}\textbf{y} \rangle.
+    \end{equation*}
+\end{Lemma}
+\begin{proof} We assume that $I$ is continuous, therefore, the Fréchet-Riesz representation theorem guarantees the existence of a uniquely determined function $R \in \mathcal{H}$ such that
+\begin{equation*}
+    \int_{[0,1]^d} f(\textbf{y}) \,\mathrm{d}\textbf{y} = I(f) = \langle f,R \rangle \hspace{2mm} \forall f\in \mathcal{H}.
+\end{equation*}
+Given that $R\in \mathcal{H}$, we have
+\begin{equation*}
+    R(\textbf{x}) = \langle R,K(\cdot,\textbf{x}) \rangle = \overline{\langle K(\cdot,\textbf{x}),R \rangle} = \overline{\int_{[0,1]^d} K(\textbf{y},\textbf{x}) \,\mathrm{d}\textbf{y}}.
+\end{equation*}
+Whereby
+\begin{multline*}
+    \int_{[0,1]^d} \langle f,K(\cdot,\textbf{y}) \rangle \,\mathrm{d}\textbf{y} = \int_{[0,1]^d} f(\textbf{y}) \,\mathrm{d}\textbf{y} = \langle f,R \rangle = \langle f,\overline{\int_{[0,1]^d} K(\textbf{y},\cdot) \,\mathrm{d}\textbf{y}} \rangle \\
+    = \langle f,R \rangle = \langle f,\int_{[0,1]^d} K(\cdot,\textbf{y}) \,\mathrm{d}\textbf{y} \rangle.
+\end{multline*}
+
+This concludes the proof.
+\end{proof}
+
+\textbf{Note:} From now on, $K$ will be assumed to satisfy the condition \textbf{$C$}.\\
+
+Lets continue the worst-case error analysis. We have
+\begin{equation*}
+    I(f) = \int_{[0,1]^d} \langle f,K(\cdot,\textbf{y}) \rangle \,\mathrm{d}\textbf{y} = \langle f,\int_{[0,1]^d} K(\cdot,\textbf{y}) \,\mathrm{d}\textbf{y} \rangle.
+\end{equation*}
+On the other hand, we have
+\begin{equation*}
+    \mathcal{Q}_{N,d}(f) = \frac{1}{N} \sum_{n=0}^{N-1} f(\textbf{x}_n) = \frac{1}{N} \sum_{n=0}^{N-1} \langle f,K(\cdot,\textbf{x}_n) \rangle = \langle f,\frac{1}{N} \sum_{n=0}^{N-1} K(\cdot,\textbf{x}_n) \rangle.
+\end{equation*}
+Therefore, the QMC rule $\mathcal{Q}_{N,d}$ in $\mathcal{H}$ has an integration error that can be expressed as an inner product, namely
+\begin{equation*}
+    e(f,\mathcal{P}) = \langle f,h \rangle,
+\end{equation*}
+where
+\begin{equation*}
+    h(\textbf{x}) = \int_{[0,1]^d} K(\textbf{x},\textbf{y}) \,\mathrm{d}\textbf{y} - \frac{1}{N} \sum_{n=0}^{N-1} K(\textbf{x},\textbf{x}_n).
+\end{equation*}
+The function above is called the \textit{representer} of the integration error. Taking the absolute value and applying the Cauchy-Schwarz inequality, we get
+\begin{equation*}
+    \abs{e(f,\mathcal{P})} \leq \norm{f} \cdot \norm{h}.
+\end{equation*}
+What's more, among all functions in the unit ball of $\mathcal{H}$, the normalized representer (\textit{i.e.} $h/\norm{h}$) is the hardest to integrate. Thus, the worst-case error reads
+\begin{equation*}
+    e(\mathcal{H},\mathcal{P}) = \norm{h}.
+\end{equation*}
+As a result, the squared worst-case error can be written as
+\begin{equation*}
+    e^2(\mathcal{H},\mathcal{P}) = \langle h,h \rangle.
+\end{equation*}
+
+\vspace{2mm}
+Finally, these results derive in the following theorem, which states the maximum integration error in terms of $\mathcal{P}$.\\
+
+\begin{Th}
+    Let $\mathcal{H}$ be a reproducing kernel Hilbert space with reproducing kernel $K$ such that condition \textbf{$C$} is satisfied, and let $\mathcal{P} = \{ \textbf{x}_0,...,\textbf{x}_{N-1} \} \subset [0,1)^d$ be a point set with $N$ elements. Then
+    \begin{equation} \label{worst-case error original}
+        e^2(\mathcal{H},\mathcal{P}) = \int_{[0,1]^d} \int_{[0,1]^d} K(\textbf{x},\textbf{y}) \,\mathrm{d}\textbf{x} \,\mathrm{d}\textbf{y} - \frac{2}{N} \sum_{n=0}^{N-1} \int_{[0,1]^d} K(\textbf{x}_n,\textbf{y}) \,\mathrm{d}\textbf{y} + \frac{1}{N^2} \sum_{n,m=0}^{N-1} K(\textbf{x}_n,\textbf{x}_m)
+    \end{equation}
+\end{Th}
+
+\vspace{4mm}
+On the other hand, there is the problem of choosing the nodes that will be used for the QMC rule. One way of solving this problem is to use what's called a \textit{lattice point set}.\\
+
+\begin{Def}
+    Let $d,N \in \mathbb{N}$, $N\geq 2$ and let $\textbf{g}\in \mathbb{Z}^d$. A point set $\mathcal{P}(\textbf{g},N) = \{ \textbf{x}_0,...,\textbf{x}_{N-1} \}$ with 
+    \begin{equation*}
+        \textbf{x}_n := \Big\{ \frac{n}{N} \textbf{g} \Big\} \hspace{2mm} \forall n=0,1,...,N-1
+    \end{equation*}
+    is called a lattice point set and $\textbf{g}$ is its \textit{generating vector}.
+\end{Def}
+
+\vspace{2mm}
+These lattice point sets have the following property,
+\begin{equation*}
+    \sum_{n=0}^{N-1} \exp{2\pi i n\textbf{h} \cdot \textbf{g} / N} = \Bigg\{ 
+    \begin{matrix}
+        N & \text{if } \textbf{h} \cdot \textbf{g} \equiv 0 \hspace{2mm} (\text{mod } N)\\
+        0 & \text{if } \textbf{h} \cdot \textbf{g} \not\equiv 0 \hspace{2mm} (\text{mod } N),
+    \end{matrix}
+\end{equation*}
+which allow them to get low values for the worst-case error (see eq. \ref{worst-case error original}). In order to do so, it is enough to find a generating vector $\textbf{g} \in \{ 0,...,N-1 \}^d$. Since checking $N^d$ integer vectors is not feasible in practice for big $N$ and $d$ values, an algorithm was developed that makes it able to create the generating vector component-by-component (CBC).\\
+
+\begin{Algorithm} \label{CBC}
+     \textbf{(CBC Algorithm).} Let $d,N \in \mathbb{N}$.
+     \begin{enumerate}
+         \item Choose $g_1 = 1$.
+         \item For $k=2,3,...,d$, choose $g_k \in \{ 1,...,N-1 \}$ that minimizes $R_N((g_1,...,g_{k-1},z))$ as a function of $z \in \{ 1,...,N-1 \}$, 
+     \end{enumerate}
+\end{Algorithm}
+where
+\begin{equation*}
+    R_N(\textbf{g}) := \sum_{\textbf{h}\in C_d^*(N)\cap \mathcal{L(\textbf{g},N)}} \frac{1}{r_1(\textbf{h})},
+\end{equation*}
+\begin{equation*}
+    r_1(\textbf{h}) = \prod_{i=1}^d r_1(h_i),
+\end{equation*}
+\begin{equation*}
+    r_1(h) := \max{\{1,\abs{h}\}},
+\end{equation*}
+\begin{equation*}
+    C_d^*(N) := \left[ \left( -N/2,N/2 \right] \cap \mathbb{Z} \right]^d\setminus\{0\}
+\end{equation*}
+and
+\begin{equation*}
+    \mathcal{L}(\textbf{g},N) := \{ \textbf{h} \in \mathbb{Z}^d : \textbf{h} \cdot \textbf{g} \equiv 0 \hspace{2mm} (\text{mod } N) \}
+\end{equation*}
+is the \textit{dual lattice} of the lattice point set $\mathcal{P}(\textbf{g},N)$ (\cite{Leobacher_Pillichshammer___2013___Introduction_to_Quasi_Montecarlo_Methods.pdf}).\\
+
+Having said that, several QMC constructions exist for which the optimal rate of convergence $\mathcal{O}(N^{-1}\log(N)^{1/2})$ yields asymptotically, but it's yet unknown what the optimal point set is (in the sense that it's a global minimizer of the worst case integration error). However, for small Fibonacci numbers $N$, it is known that the unique minimizer of the QMC worst-case error in the reproducing kernel Hilbert space $H_{mix}^1$ of 1-periodic functions with mixed smoothness is the Fibonacci lattice. What's more, for $N=1,2,3,5,7,8,12,13$ the optimal point sets are integration lattices (\cite{Hinrichs.pdf}).\\
+
+
+
+
+
+%Explicar point-sets (los de mi TFG y los del nuevo paper)
+\subsection{Optimal Point Sets for Quasi-Monte Carlo (QMC) Integration}
+%Básicamente hablar de los puntos de Hinrichs
+
+Let's consider the reproducing kernel Hilbert space $H_{mix}^1$ of 1-periodic functions with mixed smoothness. It's reproducing kernel is a tensor product kernel that reads
+\begin{equation*}
+    K_{d,\gamma}(\textbf{x},\textbf{y}) := \prod_{i=1}^{d} K_{1,\gamma}(x_i,y_i),
+\end{equation*}
+where $\textbf{x}=(x_1,...,x_d), \textbf{y}=(y_1,...,y_d)\in [0,1)^d$, 
+\begin{equation*}
+    K_{1,\gamma}(x,y) = 1 + \gamma k(\abs{x-y}),
+\end{equation*}
+\begin{equation*}
+    k(t) = \frac{1}{2} (t^2 - t + \frac{1}{6})
+\end{equation*}
+and $\gamma > 0$ is a parameter. \\
+
+As a result, if we consider a point set $\mathcal{P} = \{ \textbf{x}_0,...,\textbf{x}_{N-1} \}$, then minimizing the worst-case error $e(H_{mix}^1,\mathcal{P})$ with respect to the Hilbert space norm corresponding to the reproducing kernel $K_{d,\gamma}$ is equivalent to minimizing the double sum
+\begin{equation*}
+    G_{\gamma}(\textbf{x}_0,...,\textbf{x}_{N-1}) = \sum_{n,m=0}^{N-1} K_{d,\gamma}(\textbf{x}_n,\textbf{x}_m).
+\end{equation*}
+
+It is known that the Fibonacci lattice yields the optimal point configuration for integrating periodic functions, which may suggest that the optimal point configurations are integration lattices or at least lattice point sets, however, that's not always true. Nonetheless, integration lattices are always local minima of $e(H_{mix}^1,\mathcal{P})$. What's more, for small $\gamma$ values the optimal points are always close to a lattice point set, which for $d=2$ gives point sets of the form
+\begin{equation*}
+    \Bigg\{ \left(\frac{i}{N},\frac{\sigma(i)}{N}\right) : i=0,...,N-1 \Bigg\},
+\end{equation*}
+where $\sigma$ is a permutation of $\{ 0,1,...,N-1 \}$.\\
+
+
+In order to obtain these optimal point sets various considerations have to be contemplated. First, lets consider univariate 1-periodic functions $f : \mathbb{R} \longrightarrow \mathbb{R}$ given by their values on the torus $\mathbb{T} = [0,1)$.\\
+
+\begin{Def}
+    Let $k\in \mathbb{Z}$, the \textit{$k$-th Fourier coefficient} of a function $f\in L_2(\mathbb{T})$ is defined as:
+    \begin{equation*}
+        \widehat{f}_k = \int_0^1 f(x) \cdot \exp{2\pi ikx} \,\mathrm{d}x
+    \end{equation*}
+\end{Def}
+
+\vspace{2mm}
+In the univariate \textit{Sobolev space} $H^1(\mathbb{T}) = W^{1,2}(\mathbb{T})\subset L_2(\mathbb{T})$ of functions with first weak derivatives bounded in $L_2$, the following definition gives a Hilbert space norm on $H^1(\mathbb{T})$ depending on $\gamma>0$,
+\begin{equation*}
+    \norm{f}_{H^{1,\gamma}(\mathbb{T})}^2 = \widehat{f}_0^2 + \gamma \cdot \sum_{k\in \mathbb{Z}} \abs{2\pi k}^2 \widehat{f}_k^2 = \left( \int_{\mathbb{T}} f(x) \,\mathrm{d}x \right)^2 + \gamma \cdot \int_{\mathbb{T}} f'(x)^2 \,\mathrm{d}x,
+\end{equation*}
+where $f \in H^1(\mathbb{T})$ is a function.\\
+
+Moreover, the corresponding inner product is defined as
+\begin{equation*}
+    \langle f,g \rangle_{H^{1,\gamma}(\mathbb{T})} = \left( \int_0^1 f(x) \,\mathrm{d}x \right) \cdot \left( \int_0^1 g(x) \,\mathrm{d}x \right) + \gamma \cdot \int_0^1 f'(x)\cdot g'(x) \,\mathrm{d}x 
+\end{equation*}
+where $H^{1,\gamma}(\mathbb{T})$ denotes the Hilbert space $H^1(\mathbb{T})$ equipped with this inner product.\\
+
+What's more, $H^{1,\gamma}(\mathbb{T})$ is continuously embedded in $C^0(\mathbb{T})$, thus, $H^{1,\gamma}(\mathbb{T})$ is a reproducing kernel Hilbert space whose reproducing kernel $K_{1,\gamma} : \mathbb{T}\times\mathbb{T} \longrightarrow \mathbb{R}$ is \textit{positive definite} and reads
+\begin{equation*}
+    K_{1,\gamma}(x,y) := 1 + \gamma \cdot \sum_{k\in \mathbb{Z}\setminus\{0\}} \abs{2\pi k}^{-2} \cdot \exp{2\pi ik(x-y)} = 1 + \gamma \cdot k(\abs{(x-y)}), 
+\end{equation*}
+where $k(t) = \frac{1}{2} (t^2 - t + \frac{1}{6})$.\\
+
+Also, this kernel has the following property,
+\begin{equation*}
+    f(x) = \langle f(\cdot),K(\cdot,x) \rangle_{H^{1,\gamma}(\mathbb{T})}, \hspace{2mm} \forall f\in H^1(\mathbb{T}).
+\end{equation*}
+
+That being said, the tensor product space $H_{mix}^{1,\gamma}(\mathbb{T}^2) := H^1(\mathbb{T})\otimes H^1(\mathbb{T}) \subset C(\mathbb{T}^2)$ has a reproducing kernel given by
+\begin{equation*}
+    K_{2,\gamma}(\textbf{x},\textbf{y}) = K_{1,\gamma}(x_1,y_1) \cdot K_{1,\gamma}(x_2,y_2) = 1 + \gamma \cdot k(\abs{x_1-y_1}) + \gamma \cdot k(\abs{x_2-y_2}) + \gamma^2 \cdot k(\abs{x_1-y_1})\cdot k(\abs{x_2-y_2})
+\end{equation*}
+
+\vspace{2mm}
+Furthermore, the squared worst-case error of a QMC rule based on a point set $\mathcal{P}=\{\textbf{x}_0,...,\textbf{x}_{N-1}\}$ in $H_{mix}^{1,\gamma}(\mathbb{T}^2)$ is
+\begin{equation*}
+    e(H_{mix}^{1,\gamma}(\mathbb{T}^2),\mathcal{P})^2 = -1 + \frac{1}{N^2} \sum_{n=0}^{N-1} \sum_{m=0}^{N-1} K_{2,\gamma}(\textbf{x}_n,\textbf{x}_m).
+\end{equation*}
+
+\vspace{2mm}
+In order to acquire an optimal point set, we have to minimize the worst-case error.\\
+
+\textbf{Note}: So as to not confuse elements $\textbf{x}_n \in \mathcal{P}$ with their coordinates $\textbf{x}_n = (x_{n,1},x_{n,2})$ and simplify the notation, a given point $\textbf{x}_n \in \mathcal{P}$ will have coordinates $\textbf{x}_n = (x_n,y_n)$, that is, the first coordinate of a point in $\mathcal{P}$ will be denoted with an '$x$', whereby the second coordinate will be denoted with a '$y$'.\\
+
+For the squared worst-case error we have
+\begin{multline*}
+    e(H_{mix}^{1,\gamma}(\mathbb{T}^2),\mathcal{P})^2 = -1 + \frac{1}{N^2} \sum_{n,m=0}^{N-1} K_{2,\gamma}(\textbf{x}_n,\textbf{x}_m) = -1 + \frac{1}{N^2} \sum_{n,m=0}^{N-1} K_{1,\gamma}(x_n,x_m) K_{1,\gamma}(y_n,y_m) \\ 
+    = -1 + \frac{1}{N^2} \sum_{n,m=0}^{N-1} (1 + \gamma \cdot k(\abs{x_n-x_m}) + \gamma \cdot k(\abs{y_n-y_m}) + \gamma^2 \cdot k(\abs{x_n-x_m})\cdot k(\abs{y_n-y_m})) \\
+    =\frac{\gamma}{N^2} \cdot \sum_{n,m=0}^{N-1} (k(\abs{x_n-x_m}) +  k(\abs{y_n-y_m}) + \gamma \cdot k(\abs{x_n-x_m})\cdot k(\abs{y_n-y_m})) \\
+    = \frac{\gamma \cdot (2\cdot k(0)+ \gamma \cdot k(0)^2)}{N} + \frac{2\gamma}{N^2} \cdot \sum_{n=0}^{N-2} \sum_{m=n+1}^{N-1} (k(\abs{x_n-x_m}) +  k(\abs{y_n-y_m}) + \gamma \cdot k(\abs{x_n-x_m})\cdot k(\abs{y_n-y_m}))
+\end{multline*}
+
+\vspace{2mm}
+Therefore, minimizing the worst-case error is equivalent to minimizing either
+\begin{equation*}
+    F_{\gamma}(\textbf{x},\textbf{y}) := \sum_{n=0}^{N-2} \sum_{m=n+1}^{N-1} (k(\abs{x_n-x_m}) +  k(\abs{y_n-y_m}) + \gamma \cdot k(\abs{x_n-x_m})\cdot k(\abs{y_n-y_m}))
+\end{equation*}
+or
+\begin{equation*}
+    G_{\gamma}(\textbf{x},\textbf{y}) := \sum_{n,m=0}^{N-1} (1 + \gamma \cdot k(\abs{x_n-x_m})) \cdot (1 + \gamma \cdot k(\abs{y_n-y_m})).
+\end{equation*}
+$G_{\gamma}$ is sometimes used for theoretical considerations, however, $F_{\gamma}$ has less summands, thus it's better for numerical implementation.\\
+
+Now, let $\tau,\sigma \in S_N$ be two permutations of $\{ 0,1,...,N-1 \}$ and define the set
+\begin{equation*}
+    D_{\tau,\sigma} = \{ \textbf{x}\in [0,1)^N, \textbf{y}\in [0,1)^N : x_{\tau (0)} \leq x_{\tau (1)} \leq ... \leq x_{\tau (N-1)}, \hspace{1mm} y_{\sigma (0)} \leq y_{\sigma (1)} \leq ... \leq y_{\sigma (N-1)} \}
+\end{equation*}
+on which $\abs{x_n - x_m} = s_{n,m}(x_n-x_m)$ holds for $s_{n,m} \in \{ -1,1\}$. It turns out that the restriction of $F_{\gamma}$ to $D_{\tau,\sigma}$, namely $F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\tau,\sigma}}$, is a convex polynomial of degree 4 in $(\textbf{x},\textbf{y})$ for sufficiently small $\gamma$.\\
+
+\begin{Prop}
+    $F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\tau,\sigma}}$ and $G_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\tau,\sigma}}$ are convex if $\gamma \in [0,6]$.
+\end{Prop}
+
+\begin{proof} Because of how $F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\tau,\sigma}}$ and $G_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\tau,\sigma}}$ have been defined, we only need to prove the claim above for one of them. Lets prove it for $G_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\tau,\sigma}}$.\\
+
+The sum of convex functions is convex and $f(x-y)$ is convex if $f$ is convex, thus, we have to prove that $f(r,s) = (1+\gamma\cdot k(r))\cdot (1+\gamma\cdot k(s))$ is convex for $r,s\in [0,1]$. To prove it, we will see if the Hesse matrix $\mathcal{H}(f)$ is positive definite for $0\leq\gamma<6$. We have $k'(r) = (2r-1)/2$ and $k''(r) = 1$, thus $f_{rr}(r,s) = \gamma \cdot (1+\gamma\cdot k(s))$ is positive if $\gamma<24$ because $\min_{s\in[0,1]}{k(s)} = -1/24$. Therefore, it's enough to check if $\mathcal{H}(f)$ is positive. Since $f_{rs} = \gamma^2 \cdot (2r-1)/2 \cdot (2s-1)/2$, we have
+\begin{multline*}
+    \mid \mathcal{H}(f) \mid = (1+\gamma\cdot k(r))\cdot(1+\gamma\cdot k(s)) - \gamma^2 \cdot \left( r-\frac{1}{2} \right)^2 \cdot \left( s-\frac{1}{2} \right)^2 > 0 \\
+    \Longleftrightarrow (1+\gamma\cdot k(r))\cdot(1+\gamma\cdot k(s)) > \gamma^2 \cdot \left( r-\frac{1}{2} \right)^2 \cdot \left( s-\frac{1}{2} \right)^2.
+\end{multline*}
+Hence we can check if
+\begin{equation*}
+    1+\gamma\cdot k(r) = 1 + \frac{\gamma}{2} \cdot \left( r^2-r+\frac{1}{6} \right) > \gamma \cdot \left( r - \frac{1}{2} \right)^2,
+\end{equation*}
+which is the case for $0\leq\gamma\leq 6$ and $r\in [0,1]$. For $\gamma=6$ extra arguments are necessary, so we omit this case.
+\end{proof}
+
+\vspace{2mm}
+What's more, since
+\begin{equation*}
+    [0,1)^N\times[0,1)^N = \cup_{(\tau,\sigma) \in S_N\times S_N} D_{\tau,\sigma},
+\end{equation*}
+the global minimum of $F_{\gamma}$ on $[0,1)^N\times[0,1)^N$ can be obtained by computing
+\begin{equation*}
+    \arg \min_{(\textbf{x},\textbf{y})\in D_{\tau,\sigma}}{F_{\gamma}(\textbf{x},\textbf{y})}
+\end{equation*}
+for all $(\tau,\sigma) \in S_N\times S_N$ and choosing the smallest of all the local minima.\\
+
+Also, symmetries of the torus $\mathbb{T}^2$ allow to reduce the number of regions $D_{\tau,\sigma}$ for which the optimization problem has to be solved. However, these symmetries don't change the worst-case error for the considered classes of periodic functions. Since implementing all of the torus symmetries is difficult, only some of them have been considered. Nevertheless, using the torus symmetries it can always be arranged that $\tau = id$ and $\sigma(0) = 0$ together with fixing the point $\textbf{x}_0 = (x_0,y_0) = (0,0)$ leads to the sets
+\begin{equation*}
+    D_{\sigma} = \{ \textbf{x}\in [0,1)^N, \textbf{y}\in [0,1)^N : 0 = x_0 \leq x_1 \leq ... \leq x_{N-1}, \hspace{1mm} 0 = y_0 \leq y_{\sigma (1)} \leq ... \leq y_{\sigma (N-1)} \},
+\end{equation*}
+where $\sigma \in S_{N-1}$ denotes a permutation of $\{1,2,...,N-1\}$.\\
+
+Lets define the symmetrized metric 
+\begin{equation*}
+    d(n,m) := \min{ \{\abs{n-m}, N-\abs{n-m} \}} \hspace{2mm} \text{ for } 0\leq n,m \leq N-1.
+\end{equation*}
+
+\vspace{2mm}
+\begin{Def}
+    We define the \textit{set of semi-canonical permutations} as a set $\mathcal{C}_N \subset S_N$ whose permutations $\sigma$ satisfy
+    \begin{enumerate}
+        \item $\sigma(0) = 0$
+        \item $d(\sigma(1),\sigma(2)) \leq d(0,\sigma(N-1))$
+        \item $\sigma(1) = \min{ \{ d(\sigma(n),\sigma(n+1)) \mid n=0,1,...,N-1 \} }$
+        \item $\sigma$ is lexicographically smaller than $\sigma^{-1}$
+    \end{enumerate}
+    $\sigma(N)$ is identified with $0=\sigma(0)$.
+\end{Def}
+
+\vspace{2mm}
+As a result, we get the following lemma.\\
+
+\begin{Lemma}
+    For any $\sigma \in S_N$ such that $\sigma(0)=0$, there exists a semi-canonical permutation $\sigma'$ such that $D_{\sigma}$ and $D_{\sigma'}$ are equivalent (up to torus symmetry).
+\end{Lemma}
+\vspace{2mm}
+
+Thus, only semi-canonical $\sigma$ need to be considered.\\
+
+Moreover, considering the objective function only in domains $D_{\sigma}$ makes it strictly convex if $\textbf{x}_0 = (x_0,y_0) = (0,0)$.\\
+
+\begin{Prop}
+    $F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}}$ and $G_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}}$ are strictly convex if $\gamma \in [0,6]$.
+\end{Prop}
+
+\begin{proof} Similarly to the last Proposition, it's enough to prove the result for $G_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}}$.\\
+
+The sum of a convex and a strictly convex function is strictly convex,  thus we only need to check if 
+\begin{multline*}
+    f(x_1,...,x_{N-1},y_1,...,y_{N-1}) = \sum_{n=1}^{N-1} (1 + \gamma \cdot k(\abs{x_n-x_0}))(1 + \gamma \cdot k(\abs{y_n-y_0})) \\
+    = \sum_{n=1}^{N-1} (1 + \gamma \cdot k(x_n))(1 + \gamma \cdot k(y_n))
+\end{multline*}
+is a strictly convex function on $[0,1]^{N-1}\times[0,1]^{N-1}$. In the last Proposition we actually proved that $f_n(x_n,y_n) = (1 + \gamma \cdot k(x_n))(1 + \gamma \cdot k(y_n))$ is strictly convex if $(x_n,y_n)\in [0,1]^2$ for a fixed $n$. Therefore, the strict convexity of $f$ follows from the following lemma.
+\end{proof}
+
+\vspace{2mm}
+\begin{Lemma}
+    Let $D_i \in \mathbb{R}^{d_i}$ be convex domains and let $f_i : D_i \longrightarrow \mathbb{R}, \hspace{1mm} i=1,...,p$ be strictly convex functions. Then
+    \begin{equation*}
+        \begin{matrix}
+            f: & D=D_1\times ... \times D_p & \longrightarrow & \mathbb{R} \\
+               & (z_1,...,z_p) & \longmapsto & \sum_{i=1}^{p} f_i(z_i)
+        \end{matrix}
+    \end{equation*}
+    is strictly convex.
+\end{Lemma}
+\vspace{2mm}
+Whereby each $D_\sigma$ has a unique point where the minimum of $F_\gamma$ is attained.\\
+
+
+That being said, we want to find the smallest of all the local minima of $F_{\gamma}$ on each region $D_{\sigma} \subset [0,1)^N\times [0,1)^N$ for all semi-canonical permutations $\sigma \in \mathcal{C}_N \subset S_N$ to determine the global minimum. That gives for each $\sigma \in \mathcal{C}_N$ the following constrained optimization problem,
+\begin{equation*}
+    \min_{(\textbf{x},\textbf{y}) \in D_{\sigma}}{F_\gamma (\textbf{x},\textbf{y})} \hspace{2mm} \text{subject to } v_n(\textbf{x}) \geq 0 \text{ and } w_n(\textbf{y}) \geq 0, \hspace{2mm} \forall n=1,...,N-1,
+\end{equation*}
+where 
+\begin{equation*}
+    v_n(\textbf{x}) = x_n-x_{n-1} \text{ and } w_n(\textbf{y}) = y_{\sigma(n)} - y_{\sigma(n-1)} \hspace{2mm} \text{for } n=1,...,N-1.
+\end{equation*}
+
+What's more, we know that the necessary and sufficient (due to local strict convexity) conditions for $(\textbf{x},\textbf{y})\in D_{\sigma}$ to be local minima are
+\begin{equation*}
+    \frac{\partial}{\partial x_k}F_{\gamma}(\textbf{x},\textbf{y}) = 0 \hspace{2mm} \forall k=1,...,N-1
+\end{equation*}
+and
+\begin{equation*}
+    \frac{\partial}{\partial y_k}F_{\gamma}(\textbf{x},\textbf{y}) = 0 \hspace{2mm} \forall k=1,...,N-1,
+\end{equation*}
+where the partial derivatives of $F_{\gamma}$ are given by the formulas from the following proposition.\\
+
+\begin{Prop}
+    Given a permutation $\sigma \in \mathcal{C}_N$, the partial derivative of $F_{\gamma \mid D_{\sigma}}$ with respect to the second component $\textbf{y}$ is given by
+    \begin{equation*}
+        \frac{\partial}{\partial y_k}F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}} = y_k \left( \sum_{n=0, n\neq k}^{N-1} c_{n,k} \right) - \sum_{n=0, n\neq k}^{N-1} c_{n,k} \cdot y_n + \frac{1}{2}\cdot \left( \sum_{n=0}^{k-1} c_{n,k} \cdot s_{n,k} - \sum_{m=k+1}^{N-1} c_{k,m} \cdot s_{k,m} \right),
+    \end{equation*}
+    where $s_{n,m} := \text{sign}(y_n-y_m)$ and $c_{n,m} := 1 + \gamma \cdot k(\abs{x_n-x_m}) = c_{m,n}$.
+    The analogue for the partial derivatives with respect to $\textbf{x}$ is obtained by interchanging $\textbf{x}$ with $\textbf{y}$ and using $c_{n,m} = 1 + \gamma \cdot k(\abs{y_n-y_m})$ and $s_{n,m} = -1$.
+    The second order derivatives with respect to $\textbf{y}$ are given by
+    \begin{equation*}
+        \frac{\partial^2}{\partial y_k \partial y_j}F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}} = \Bigg\{ 
+        \begin{matrix}
+            \sum_{n=0}^{k-1} c_{n,k} + \sum_{n=k+1}^{N-1} c_{n,k} & \text{for } j=k \\
+            -c_{k,j} & \text{for } j\neq k
+        \end{matrix}
+        , \hspace{2mm} k,j \in \{ 1,...,N-1 \}.
+    \end{equation*}
+    The analogue for $\frac{\partial^2}{\partial x_k \partial x_j}F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}}$ is obtained by interchanging $\textbf{x}$ with $\textbf{y}$ and using $c_{n,m} = 1 + \gamma \cdot k(\abs{y_n-y_m})$.
+\end{Prop}
+\begin{proof} The partial derivative of $F_{\gamma \mid D_{\sigma}}$ with respect to $\textbf{y}$ is
+\begin{multline*}
+    \frac{\partial}{\partial y_k}F_{\gamma}(\textbf{x},\textbf{y})_{\mid D_{\sigma}} = \sum_{n=0}^{N-2} \sum_{m=n+1}^{N-1} \frac{\partial}{\partial y_k} k(\abs{y_n-y_m})(1+\gamma \cdot k(\abs{x_n-x_m})) + \frac{\partial}{\partial y_k} k(\abs{x_n-x_m}) \\
+    = \sum_{n=0}^{N-2} \sum_{m=n+1}^{N-1} \frac{\partial}{\partial y_k} k(\abs{y_n-y_m})c_{n,m} + \frac{\partial}{\partial y_k} k(\abs{x_n-x_m}) = \sum_{n=0}^{N-2} \sum_{m=n+1}^{N-1} c_{n,m} \frac{\partial}{\partial y_k} k(\abs{y_n-y_m}) \\
+    = \sum_{n=0}^{N-2} \sum_{m=n+1}^{N-1} c_{n,m} k'(s_{n,m}(y_n-y_m)) \cdot \Bigg\{ 
+    \begin{matrix}  
+        s_{n,m} & \text{for } n=k \\
+        -s_{n,m} & \text{for } m=k \\
+        0 & \text{else}
+    \end{matrix} \\
+    = \sum_{m=k+1}^{N-1} c_{k,m} s_{k,m}\left( s_{k,m}(y_k-y_m) - \frac{1}{2} \right) - \sum_{n=0}^{k-1} c_{n,k} s_{n,k} \left( s_{n,k}(y_n-y_k) - \frac{1}{2} \right) \\
+    = y_k \left( \sum_{n=0, n\neq k}^{N-1} c_{n,k} \right) - \sum_{n=0, n\neq k}^{N-1} c_{n,k} y_n + \frac{1}{2} \left( \sum_{n=0}^{k+1} c_{n,k} s_{n,k} - \sum_{m=k+1}^{N-1} c_{k,m} s_{k,m} \right).
+\end{multline*}
+From this expression the second derivative of $F_{\gamma \mid D_{\sigma}}$ with respect to $\textbf{y}$ is trivially obtained. The derivatives for $\textbf{x}$ are obtained analogously.
+\end{proof}
+\vspace{2mm}
+
+Now we can approximate local minima of $F_{\gamma}$ on a given $D_{\sigma}$. Doing this for all $\sigma \in \mathcal{C}$ we can obtain a candidate for the global minimum, however, due to the finite precision of floating point arithmetic we can't be sure to be close to the actual global minimum. Luckily, it is possible to compute a lower bound for the optimal point set for each $D_{\sigma}$. This is because a lower bound on a function $F$ can be obtained for convex problems with linear inequality constraints using the \textit{Lagrangian}
+\begin{multline*}
+    \mathcal{L}_F(\textbf{x},\textbf{y},\bm{\lambda},\bm{\mu}) := F(\textbf{x},\textbf{y}) - \bm{\lambda}^T \cdot \textbf{v}(\textbf{x}) - \bm{\mu}^T \cdot \textbf{w}(\textbf{y}) = F(\textbf{x},\textbf{y}) - \sum_{n=1}^{N-1} (\lambda_n \cdot v_n(\textbf{x}) + \mu_n \cdot w_n(\textbf{y})).
+\end{multline*}
+As a result, we get
+\begin{equation*}
+    \min_{(\textbf{x},\textbf{y})\in D_{\sigma}}{F(\textbf{x},\textbf{y})} \geq \mathcal{L}_F(\Tilde{\textbf{x}},\Tilde{\textbf{y}},\bm{\lambda},\bm{\mu})
+\end{equation*}
+for all $(\Tilde{\textbf{x}},\Tilde{\textbf{y}},\bm{\lambda},\bm{\mu})$ that satisfy
+\begin{equation*}
+    \nabla_{(\textbf{x},\textbf{y})}\mathcal{L}_F (\Tilde{\textbf{x}},\Tilde{\textbf{y}},\bm{\lambda},\bm{\mu}) = 0 \hspace{2mm} \text{with } \bm{\lambda},\bm{\mu}\geq 0,
+\end{equation*}
+where $\nabla_{(\textbf{x},\textbf{y})} = (\nabla_{\textbf{x}},\nabla_{\textbf{y}})$ and $\nabla_{\textbf{x}}$ denotes the gradient of a functions with respect to the variables in $\textbf{x}$.\\
+
+Therefore, we have to find an admissible point $(\Tilde{\textbf{x}},\Tilde{\textbf{y}},\bm{\lambda},\bm{\mu})$ for each $D_{\sigma}$ which yields a lower bound that is larger than the candidate for the global minimum. The following theorem is also relevant.\\
+
+\begin{Th}
+    For $\sigma\in \mathcal{C}_N$ and $\delta > 0$ let $(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) \in D_{\sigma}$ be a point such that
+    \begin{equation} \label{uno}
+        \frac{\partial}{\partial x_k}F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) = \delta \hspace{2mm} \forall k = 1,...,N-1
+    \end{equation}
+    and
+    \begin{equation} \label{dos}
+        \frac{\partial}{\partial y_k}F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) = \delta \hspace{2mm} \forall k = 1,...,N-1.
+    \end{equation}
+    Then the following inequality holds,
+    \begin{multline} \label{Wolf}
+        F(\textbf{x},\textbf{y}) \geq F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) - \delta \cdot \sum_{n=1}^{N-1} ((N-n)\cdot v_n(\Tilde{\textbf{x}}_{\sigma}) + \sigma (N-n) \cdot w_n(\Tilde{\textbf{y}}_{\sigma})) \\
+        > F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) - \delta \cdot N^2 \hspace{2mm} \forall (\textbf{x},\textbf{y})\in D_{\sigma}.
+    \end{multline}
+\end{Th}
+
+\begin{proof} Let $\textbf{P}_{\sigma} \in \{ -1,0,1 \}^{(N-1)\times(N-1)}$ be the permutation matrix associated to $\sigma \in S_{N-1}$ and let
+\begin{equation*}
+    \textbf{B} := 
+    \begin{pmatrix}
+        1&-1&0&...&0&0\\
+        0&1&-1&...&0&0\\
+        \vdots& & &\ddots& &\vdots\\
+        0& &...&0&1&-1\\
+        0& &...& &0&1
+    \end{pmatrix} \in \mathbb{R}^{(N-1)\times(N-1)}.
+\end{equation*}
+The partial derivatives of $\mathcal{L}_F$ with respect to $\textbf{x}$ and $\textbf{y}$ are given by
+\begin{equation*}
+    \nabla_{\textbf{x}}\mathcal{L}_F(\textbf{x},\textbf{y},\bm{\lambda},\bm{\mu}) = \nabla_{\textbf{x}}F(\textbf{x},\textbf{y}) - 
+    \begin{pmatrix}
+        \lambda_1 - \lambda_2\\
+        \vdots\\
+        \lambda_{N-2} - \lambda_{N-1}\\
+        \lambda_{N-1}
+    \end{pmatrix}
+    = \nabla_{\textbf{x}}F(\textbf{x},\textbf{y}) - \textbf{B}\bm{\lambda}
+\end{equation*}
+and
+\begin{equation*}
+    \nabla_{\textbf{y}}\mathcal{L}_F(\textbf{x},\textbf{y},\bm{\lambda},\bm{\mu}) = \nabla_{\textbf{y}}F(\textbf{x},\textbf{y}) - 
+    \begin{pmatrix}
+        \mu_{\sigma(1)} - \mu_{\sigma(2)}\\
+        \vdots\\
+        \mu_{\sigma(N-2)} - \mu_{\sigma(N-1)}\\
+        \mu_{\sigma(N-1)}
+    \end{pmatrix}
+    = \nabla_{\textbf{y}}F(\textbf{x},\textbf{y}) - \textbf{B}\textbf{P}_{\sigma}\bm{\mu}.
+\end{equation*}
+
+Therefore, by choosing
+\begin{equation*}
+    \bm{\lambda} = \textbf{B}^{-1} \nabla_{\textbf{x}}F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) \hspace{2mm} \text{ and } \hspace{2mm} \bm{\mu} = \textbf{P}_{\sigma}^{-1} \textbf{B}^{-1} \nabla_{\textbf{y}}F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma})
+\end{equation*}
+we get
+\begin{equation*}
+    \nabla_{\textbf{x}}F(\Tilde{\textbf{x}},\Tilde{\textbf{y}}) = \textbf{B} \bm{\lambda} \hspace{2mm} \text{ and } \hspace{2mm} \nabla_{\textbf{y}}F(\Tilde{\textbf{x}},\Tilde{\textbf{y}}) = \textbf{B}\textbf{P}_{\sigma}\bm{\mu}.
+\end{equation*}
+Since 
+\begin{equation*}
+    \textbf{B}^{-1} := 
+    \begin{pmatrix}
+        1&1&...&1\\
+        0&1&...&1\\
+        \vdots&0&\ddots&\vdots\\
+        0&...&0&1
+    \end{pmatrix} \in \mathbb{R}^{(N-1)\times(N-1)},
+\end{equation*}
+it turns out that $\textbf{y},\bm{\lambda} > 0$, which together with \textit{Wolfe duality} gives the first inequality of equation \eqref{Wolf}. In order to get the second inequality it has to be noted that $0 \leq \abs{v_n(\textbf{x})},\abs{w_n(\textbf{y})} \leq 1$ and that $2\cdot \sum_{n=1}^{N-1} \sigma(N-n) = 2 \cdot \sum_{n=1}^{N-1} n = (N-1)(N-2) < N^2$.
+\end{proof}
+\vspace{2mm}
+
+Having said that, suppose that $(\textbf{x}^*,\textbf{y}^*)\in D_{\sigma^*}$ is a candidate for an optimal point set. If we can find points $(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) \in D_{\sigma}$ that fulfill equations \eqref{uno} and \eqref{dos} for all other $\sigma \in \mathcal{C}_N$ and
+\begin{equation*}
+    F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) - \delta N^2 \geq F_{\gamma}(\textbf{x}^*,\textbf{y}^*) \hspace{2mm} \text{for } \delta > 0,
+\end{equation*}
+we can be sure that $D_{\sigma^*}$ is the unique domain $D_{\sigma}$ that contains the globally optimal point set.\\
+
+In conclusion, to find the global minimum $(\textbf{x}^*,\textbf{y}^*)$ of $F_{\gamma}$, one has to first compute
+\begin{equation*}
+    \sigma^* := \arg\min_{\sigma \in \mathcal{C}_N}{\min_{(\textbf{x},\textbf{y})\in D_{\sigma}}{F_{\gamma}(\textbf{x},\textbf{y})}},
+\end{equation*}
+in order to obtain a candidate point set $(\textbf{x}^*,\textbf{y}^*)\in D_{\sigma^*}$ for the global minimum of $F_{\gamma}$. After that, one has to compute lower bounds for all the other domains $D_{\sigma}$ with $\sigma\in \mathcal{C}_N$. That way, if we obtain for each $\sigma$ a point $(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma})$ such that
+\begin{equation*}
+    \min_{(\textbf{x},\textbf{y})\in D_{\sigma^*}}{F_{\gamma}(\textbf{x},\textbf{y})} \approx \theta_N := F_{\gamma}(\textbf{x}^*,\textbf{y}^*) < \mathcal{L}_F(\Tilde{\textbf{x}}_{\sigma},\Tilde{\textbf{y}}_{\sigma}) - 2N^2\delta \leq F_{\gamma}(\textbf{x},\textbf{y}),
+\end{equation*}
+we could be sure that the global optimum is indeed located in $D_{\sigma^*}$ and that $(\textbf{x}^*,\textbf{y}^*)$ is a good approximation to it (\cite{Hinrichs.pdf}).\\
+
+
+The optimal point sets for a parameter value $\gamma=1$ obtained by \cite{Hinrichs.pdf} using this method are shown in Figure \ref{fig:Hinrichs}. In this work we will use those point sets so as to test the efficiency of the new method.\\
+
+%What's more, new research regarding optimal point sets has been published. This time, \cite{NewPointSets} constructed optimal $L_{\infty}$ star discrepancy sets. As a result, we will also be testing how good these new optimal point sets are for our method.\\
+
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%\subsection{Optimal $L_{\infty}$ Star Discrepancy Sets}
+
+
+
+
+
+
+%Funcionamiento de lo que hará el programa.
+\subsection{Functioning of our Method}
+%OBS: NUESTRO TEST SYSTEM DE QUADRATS ESTA FORMADO POR QUADRATS EN LOS
+%PUNTOS DE LOS OPTIMAL POINT SETS
+
+Our method combines Stereology with AI using Quasi-Monte Carlo Integration and Optimal Point Sets in the process. CLIP-EBC was trained to be used with an entire image. Instead, our method consists of applying the CLIP-EBC model to image crops of a given size whose left corners are located at each point contained in the chosen Optimal Point Set. Since this approach resembles the working of a test system of quadrats, we then use Equation \ref{Conteo_usada} to estimate the total count values, substituting the expectation (using Equation \ref{QMC}) by a weighted sum of the estimated count values for the image crops.\\ 
+
+Just to clarify how the image crops were made, let $N$ be the total number of points contained in the chosen Optimal Point Set. For each point, we crop the image in such a way that the exact location of the point in the image coincides with the left corner of the image crop. Then, for an image with height $H$ and width $W$, the width of the crop is obtained as $\text{\textit{width}} = W/N$ and the height is obtained as $\text{\textit{height}} = H/N$. Note that the corner positions of an image crop may not be integers as a result of the latter calculations, thus, the resulting corner positions where rounded to the lower integer in order for the corner positions to coincide with image pixels. Also, note that points in \cite{Hinrichs.pdf} are normalized to $[0,1]^2$, thus, for an image with height $H$ and width $W$ the points are scaled accordingly to $[0,W]\times [0,H]$.
+%% DomingoMaster: Added
+This reduces the rounding errors and allows to work most of the case with integers, because $W,H$ are typically power of two.
+\\
+
+
+
+

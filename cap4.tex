@@ -1,0 +1,31 @@
+We have tested a new crowd-counting estimation method that combines AI and Stereology. In order to do so, we first applied the CLIP-EBC model (AI) to image crops of a given image in such a way that the bottom-left corner of the crop coincides with a point from one of the Optimal Point Sets for Quasi-Monte Carlo Integration. Subsequently, we approximated (using Equation \ref{QMC}) the expectation required for Equation \eqref{Conteo_usada} using a weighted sum of the estimated count values for the image crops, since we can consider our approach as if we were using a test system of quadrats (Stereology). Note that using QMC Integration with optimal points that minimize the worst case error in the reproducing
+kernel Hilbert space $H^1_{mix}$ should provide estimators with low variances, improving the quality of the estimated quantity.\\
+
+Results for MAE and RMSE validation metrics in three public crowd-counting datasets suggest that this method is capable of estimating count values of individuals in images, although there is a lot of testing to be made. More importantly, our method obtains lower computing times than those obtained by one of the best state-of-the-art models, CLIP-EBC.\\
+
+
+%Mencionar problemas y que hay que estudiarlos
+Some problems regarding the variants used for our method have been discussed as well. These problems are:
+\begin{itemize}
+    \item An optimal combination of the parameters in the tuple $(\text{\textit{number\_of\_points}},  \text{\textit{window\_size}}, \text{\textit{stride}})$ that performs very well on low-density images may not be the same as another one that performs very well on high-density images.
+    \item The optimal number of points in the Point Set might be dependent on the crowd distribution of the image.
+    \item The \textit{window\_size} and \textit{stride} parameters need to be adjusted properly considering the scale and resolution problems related to crowd counting.
+    \item The \textit{window\_size} and \textit{stride} parameters need to be adjusted properly so as to obtain good performance while having acceptable computing times.
+    %%DomingoMaster
+    \item The selected points may be dependent on the image, and not only on the general problem. 
+    %%DomingoMaster: 
+\end{itemize}
+We believe these problems can be solved, but more research has to be made.\\
+
+%Mencionar otras posibles mejoras no comentadas en el cap3
+To end this work, we want to propose some improvements that could be made to our method in order for it to perform better:
+\begin{itemize}
+    \item Implementing an automatic image preprocessing tool that can crop the original images in such a way that no scenery/landscape appears in the crop, meaning only the individuals we want to count appear in it. %%DomingoMaster:
+    Even if some individuals are eliminated in the process we think the benefits outweigh the inconveniences, since the goal is to give an actual approximation, not to take into account every possible individual. Also, this would reduce the size of the image, so even though we include another tool into the algorithm, computing times may not increase much. 
+    \item Implementing an algorithm that selects the ``optimal'' window size and stride based on the scale of the cropped image, meaning their values would be based on the head sizes of individuals. This might be complicated and possibly make the method take a lot of time to estimate count values, but it could enhance the performance. Another possibility would be to test different window sizes and strides to try and obtain optimal values in general.
+    %%%What's more, new research regarding optimal point sets has been published. This time, \cite{NewPointSets} constructed optimal $L_{\infty}$ star discrepancy sets. As a result, we will also be testing how good these new optimal point sets are for our method.\\
+    \item Test our method with other Optimal Point Sets, such as those proposed in \cite{NewPointSets}. Different variations of our method adapted to use other point sets might obtain a better performance.
+    %%%Mencionar también el paper sobre distorsión debido a perspectiva y los nuevos tipos de quadrats que se podrían conseguir para mejorar el modelo.
+    \item Improve our method by implementing a similar strategy to that proposed in \cite{Perspectiva}. This would consist of transforming our test system of quadrats (obtaining different types of image crops) to take into account perspective distortion, possibly alleviating the scale problem in crowd-counting. This could be tested for both a method that uses the full test system of quadrats (not considering QMC Integration) and a method that considers only those quadrats in the test system corresponding to the points in an Optimal Point Set (in a similar way to that of our method, using QMC Integration).
+\end{itemize}
+

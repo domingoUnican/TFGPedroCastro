@@ -1,0 +1,121 @@
+
+%INFO SOBRE DATASETS EN FGENET
+%Hablar de datasets
+We conducted several experiments, using our method with three publicly available crowd counting datasets: ShangHaiTech Part\_A [\cite{shab}], ShangHaiTech Part\_B [\cite{shab}] and UCF-QNRF [\cite{qnrf}]. The descriptions for these datasets are the following \citep{FGENet}:
+
+\begin{itemize}
+    \item ShangHaiTech Part\_A (SHA): This dataset is part of the ShangHaiTech dataset, which holds immense significance in crowd counting. It is regarded as a cornerstone dataset and has earned its reputation as one of the largest and most widely used datasets. It encompasses a total of 482 web images, divided into 300 train images and 182 test images. Additionally, it contains an extensive collection of marker points which sum up to 241,677 individuals. On average, there are around 501 marker points per image. The minimum number of people in an image is 33. The maximum number of people in an image is 3139.
+    \item ShangHaiTech Part\_B (SHB): This dataset is also part of the ShangHaiTech dataset. It contains a total of 716 images of the busy streets of ShangHai, divided into 400 train images and 316 test images. It presents diverse scene types, encompassing varied perspective angles and crowd density, thus providing a rich and representative collection for comprehensive evaluation. Additionally, it contains a collection of marker points which give a total of 88,488 individuals. On average, there are around 124 marker points per image. The minimum number of people in an image is 9. The maximum number of people in an image is 578.
+    \item UCF-QNRF (QNRF): This dataset is a comprehensive and extensive collection that significantly contributes to the field of crowd counting research. It has a total amount of 1535 images, divided into 1201 train images and 334 test images. It provides a rich and diverse set of data from web images. Additionally, it contains a a collection of marker points which sum up to 1,251,642 individuals. On average, there are around 815 marker points per image. The minimum number of people in an image is 49. The maximum number of people in an image is 12,685.
+\end{itemize}
+It is worth mentioning that the experiments were carried out using only the test images from these datasets, as using the train images would provide biased results because the CLIP-EBC model was trained with those images and thus will perform better with them. This is also a way of testing the generalization of the model.\\
+
+
+\section{Method configuration and metrics}
+%Configuraciones del modelo
+We used the same model configuration given by \cite{CLIP}, namely a block size of $r=8$ (since smaller block sizes offer better results as more blocks can be created and hence models can learn to better use the position information of each individual during training), a minimum recognizable scale of $s=4$ (thus a maximum allowable count value $\mathcal{M}=(8//4)^2=4$) and fine-grained bins. Also, bilinear interpolation is leveraged to transform the feature
+maps' spatial size. The CLIP-EBC model variant we used was named ``clip\_vit\_b16''. The main reason is that is the newest model and the one with the best results for the NWPU dataset~\citep{nwpu}, which is another common dataset used for crowd counting with a total of 3609 images, divided into 3109 train images and 500 test images. We decided not to test our method with the NWPU dataset because of the high amount of computing time the model takes to finish. however, because of the massive amount of images present in the dataset we decided to pick the model with best results for this dataset as we think it may be one of the best datasets to train regarding generalisation.\\
+
+%Detalles del entrenamiento 
+%Comentar que también es posible que entrenando el modelo completo se obtengan mejores resultados, que por ahora sólo se han usado los pesos preentrenados por CLIP-EBC, dado que esos pesos son los que consiguieron que el método por sí sólo obtenga de los mejores MAE en crowd counting.
+Having said that, we initialised the CLIP-EBC model with the pre-trained weights provided in \url{https://github.com/Yiming-M/CLIP-EBC} for each of the different datasets. We decided to use the same weights they obtained since we use the same exact model but only applied to crops of the images. However, it could be the case that our model performs better if we train it from scratch rather than using pre-trained weights. For the DACE loss from Equation \ref{loss} the chosen loss count function was the DMCount Loss function and the $\lambda$ was set to 1. Other parameters we had to set, which will be of importance later, where the \textit{window\_size} and \textit{stride} parameters. These parameters are related to the CLIP-EBC implementation of the Sliding Window Technique, which we decided to use as it obtained better results. The \textit{window\_size} is the size of the window in pixels. The \textit{stride} is the step size we move the window in pixels. We tested a lot of values for these parameters, but we only managed to obtain results for a few of them due to complications with the python code. As a result, we only tested the pairs of values $(\text{\textit{window\_size}, \textit{stride}})=(16,16)$ and $(\text{\textit{window\_size}, \textit{stride}})=(224,224)$. Finally, the batch size was fixed at 1 for all datasets, since it is required for the Sliding Window implementation due to varying image sizes.\\
+
+With regards to the Optimal Point Sets used in our method, we tested all of them. However, we only managed to obtain results for those with $2$ and $16$ points, again due to technical complications.\\
+%%DomingoMaster: Si decimos esto, puede parecer que es muy trivial.
+%%complications with the python code.\\
+
+%Métricas de validación
+Finally, following other Crowd Counting related works, we use the Mean Absolute Error (MAE) and Root Mean Square Error (RMSE) to evaluate our models. These evaluation metrics are defined as follows:
+%%DomingoMaster: ¿Deberiamos poner que la segunda es la raiz de la varianza?
+$$ \text{MAE} = \frac{1}{N} \sum_{i=1}^{N}{\abs{C_i - C_i^*}}, \hspace{1cm} \text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N}{(C_i - C_i^*)^2}}, $$
+where $N$ is the number of images in the testing dataset, $C_i$ is the ground-truth global count value for image $i$, and $C_i^*$ is the predicted count value. 
+Lower scores indicate better results \citep{CLIP}.\\
+
+
+\section{Performance comparison}
+%Resultados
+%%%MAE y RMSE
+As for the evaluation metric values obtained with our method, we compare them with the state-of-the-art crowd-counting methods. Table \ref{tabla} tabulates the results so as to easily compare the different methods' performance.\vspace{6cm}
+
+%MIRAR CON DOMINGO CUALES PONGO
+%COGER hasta el top 7
+\begin{table}[h]
+    \begin{center}
+        \begin{tabular}{| l | c | c | c | c | c | c | }
+            \hline
+            %\multicolumn{4}{ |c| }{Coches disponibles} \\ \hline
+            \multicolumn{1}{ |c| }{Method} & \multicolumn{2}{ |c| }{SHA} & \multicolumn{2}{ |c| }{SHB} & \multicolumn{2}{ |c| }{QNRF} \\ 
+             & MAE & RMSE & MAE & RMSE & MAE & RMSE \\ \hline
+            PSL-NET [\cite{PSL-Net}] & \textbf{49.9} & \textbf{77.6} & \textbf{5.8} & \textbf{9.2} & - & - \\
+            VMambaCC [\cite{VMambaCC}] & 51.87 & 81.3 & - & - & - & - \\
+            P2PNet [\cite{P2PNet}] & 52.74 & 85.06 & 6.25 & 9.9 & 85.32 & 154.5 \\
+            SGANet [\cite{SGANet}] & 58 & - & 6.3 & - & 89.1 & - \\
+            M-SFANet+M-SegNet [\cite{M-SFANet+M-SegNet}] & 57.55 & 94.48 & 6.32 & 10.06 & 87.64 & 147.78 \\
+            SPANet [\cite{SPANet}] & 59.4 & 92.5 & 6.5 & 9.9 & - & - \\
+            CSRNet-EBC [\cite{CLIP}] & 66.3 & 105 & 6.9 & 11.3 & 79.3 & 135.8 \\
+            DMCount-EBC [\cite{CLIP}] & 62.3 & 98.9 & 7 & 10.9 & 77.2 & 130.4 \\
+            DMCount-EBC (32,dynamic) [\cite{CLIP}] & - & - & - & - & 76.06 & \textbf{127.72} \\
+            DMCount-EBC (16,dynamic) [\cite{CLIP}] & - & - & - & - & \textbf{75.9} & 130.48 \\
+            FGENet [\cite{FGENet}] & 51.66 & 85 & 6.34 & 10.53 & 85.2 & 158.76 \\
+            DM-Count [\cite{DMCount}] & 59.7 & 95.7 & 7.4 & 11.8 & 85.6 & 148.3 \\
+            GauNet (ResNet-50) [\cite{GauNet}] & 54.8 & 89.1 & 6.2 & 9.9 & 81.6 & 153.7 \\
+            MAN [\cite{MAN}] & 56.8 & 90.3 & - & - & 77.3 & 131.5 \\
+            LSC-CNN [\cite{LSC-CNN}] & 66.4 & 117 & 8.1 & 12.7 & - & - \\
+            CLIP-EBC (ResNet50) [\cite{CLIP}] & 55 & 88.7 & 6.3 & 10.2 & 80.5 & 136.6 \\
+            CLIP-EBC (ViT-B/16) [\cite{CLIP}] & 53.2 & 85.9 & 6.6 & 10.5 & 80.3 & 139.3 \\
+            Stereo-CLIP-EBC (ViT-B/16) (H2\_S224) (\textbf{ours}) & 78.2 & 119.3 & 30.2 & 46.7 & 134.5 & 251.6 \\
+            Stereo-CLIP-EBC (ViT-B/16) (H16\_S16) (\textbf{ours}) & 1199 & 1604.3 & 168.8 & 206 & 3462.2 & 4318.9 \\
+            Stereo-CLIP-EBC (ViT-B/16) (H2\_S16) (\textbf{ours}) & 1393.9 & 1859.9 & - & - & - & - \\ \hline
+        \end{tabular}
+        \caption{Comparison of our models with the state-of-the-art crowd counting approaches on ShangHaiTech A (SHA), ShangHaiTech B (SHB) and UCF-QNRF (QNRF). Best results are highlighted in bold font. Our models are represented as \textit{Stereo-CLIP-EBC (H*\_S*)}, where the ``*'' is replaced depending on the cardinality of the chosen Optimal Point Set and the values set for the \textit{window\_size} and \textit{stride} parameters, respectively. For example, if we choose an Optimal Point Set with 2 points and set $\text{\textit{window\_size}}=224$ and $\text{\textit{stride}}=224$ we would have (H2\_S224). We didn't obtain results for the SHB and QNRF datasets with the H2\_S16 variant of our method because of very high computing times.}
+        \label{tabla}
+    \end{center}
+\end{table}
+
+%DISCUSION SOBRE EL MAE Y RMSE ... POSIBLES PROBLEMAS Y SOLUCIONES
+%Posibles problemas que encuentra el modelo comparando los distintos
+%valores probados para N, stride y window. Comentar por qué ocurren.
+The H2\_S224 variant of our method seems to work better with high-density images, since the ratio between its MAE and CLIP-EBC's MAE is much higher with the ShangHaiTech B dataset, which has the lowest amount of mean individuals per image in all datasets. On the contrary, the H16\_S16 variant seems to work better with low-density images. Because of the low amount of variants we could test it is difficult to know what makes one variant be better with high-density images and the other be better with low-density images. However, we can speculate that there will be a specific number of points and specific values for the window size and stride such that our method will perform in a similar manner for any type of image. Also, this means that we may be able to speciallize our method in such a way that a certain variant may perform best for high-density images and the other may perform best for low-density images.\\
+
+%Comentar que posiblemente se consigan mejores resultados de MAE al considerar una cierta cantidad N de puntos y un cierto valor para window y stride que obtenga una relación adecuada para tamaños de cabezas (que no se salgan del tamaño del sliding window +  para evitar posibles problemas con las distintas escalas)
+%%DomingoMaster: He reformulado un par de cosas.
+A comparison of the performance with other state-of-the-art methods seems to indicate that the H2\_S224 variant is the only one interesting. Nonetheless, comparing the results obtained between the different variants it looks like it would be possible to improve our method's performance by choosing the right combination for the tuple $(\text{\textit{number\_of\_points}}, \text{\textit{window\_size}}, \text{\textit{stride}})$. This is because, considering how the Sliding Window Technique works and the performance difference between both H2 variants, we think that the \textit{window\_size} parameter was set too low for the model to work properly. In Chapter \ref{cap:Teoria} we mentioned several problems, including the different scales and resolutions of individuals in the images. We speculate that the window used was so small that patterns in the image, such as leaves, could have been interpreted as individuals, thus greatly increasing the estimated number of people. Furthermore, we think that the window size should ideally be set based on the biggest head size in the image crop so as to make sure that all individuals can fit completely in the window. 
+%%DomingoMaster: Añadido otra cosa
+These parameters could be tried to be guessed by a human or developing some machine learning method.
+A simple solution to avoid slowing down the predictions is to choose a big enough window size.\\
+
+It should be worth noting that our method gives a Stereology estimation of the number of people in the image based on the estimation of the number of people that AI gives for each crop of the original images, thus, we didn't expect to obtain perfect predicted values, but an approximation. More importantly, as we will later see, we wanted to check whether it was or not possible to reduce the computing times required to give an estimation for the number of people in an image. However, we think that several improvements could be made to our method in order to obtain better results, comparable with state-of-the-art methods. These improvements will be discussed in Chapter \ref{cap:Conclusiones}, when talking about open problems.\\
+
+\section{Computing times}
+%%%Tiempos de computo
+To end this section, we will briefly compare computing times measured for the CLIP-EBC model and our models for each dataset, from the moment the model starts predicting count values up until the moment the model outputs the results. Table \ref{tabla2} tabulates those computing times so as to easily compare the different models' efficiency.
+
+\begin{table}[h]
+    \begin{center}
+        \begin{tabular}{ | l | c | c | c | }
+            \hline
+            %\multicolumn{4}{ |c| }{Coches disponibles} \\ \hline
+            \multicolumn{1}{ |c| }{Method} & \multicolumn{3}{ |c| }{Computing time} \\ 
+             & SHA & SHB & QNRF \\ \hline
+            CLIP-EBC (ViT-B/16) & 14m 20.82s & 36m 48.63s & 1h 48m 58s \\
+            Stereo-CLIP-EBC (ViT-B/16) (H2\_S224) & \textbf{12m 0.81s} & \textbf{23m 55.66s} & \textbf{1h 5m 8s}  \\
+            Stereo-CLIP-EBC (ViT-B/16) (H16\_S16) & 17m 15.19s & 35m 5.33s & 1h 54m 59s  \\
+            Stereo-CLIP-EBC (ViT-B/16) (H2\_S16) & 1h 48m 15s & - & -  \\ \hline
+        \end{tabular}
+        \caption{Comparison of our models with the state-of-the-art crowd counting approaches on ShangHaiTech A (SHA), ShangHaiTech B (SHB) and UCF-QNRF (QNRF). Best results are highlighted in bold font.}
+        \label{tabla2}
+    \end{center}
+\end{table}
+
+%Hablar sobre mejoras en eficiencia del H2_S224 y de que el tamaño de la ventana afecta bastante al tiempo de cómputo.
+Our method's H2\_S224 variant obtains the lowest computing times out of all the tested models for every dataset. To obtain the results for SHA, SHB and QNRF it reduced CLIP-EBC's computing time in 19\%, 54\% and 67\%, respectively. This shows how the more efficient our method is the more complex the tasks are compared to the CLIP-EBC method. Nevertheless, the other variants of our method don't show such good results. The H6\_S16 variant has similar computing times to that of CLIP-EBC, meaning that it has way worse performance than CLIP for a similar computing time. Moreover, the H2\_S16 variant has much higher computing times to that of CLIP-EBC, while having worse performance. However, taking a look at both H2 variants we can see that while one model outputs good results in less time the other outputs bad results in a longer time. This suggests that a big part the problem resides on the values set for the window size and stride, specially for the window size. Because of how the Sliding Window Technique works, if the stride and window size are the same, choosing a smaller window implies that, for a given image (or image crop in this case), more windows will be used for the model's predictions in order to cover the whole image with windows. This is almost the same as considering a lot more image crops the smaller the window is, which ultimately increases the amount of time the model takes to predict. Just as an example to clarify the situation (even though this might not be true), the fact that CLIP-EBC and the H16\_S16 variant obtain a similar computing time would suggest that a similar amount of windows where used for both models.
+%Hablar sobre encontrar un equilibrio entre número de puntos y tamaño de la ventana y el stride, poniendo evidencia en los tiempos de cómputo y resultados obtenidos
+As a result, similarly to what happens with our method's performance, it looks like it would be possible to improve its efficiency by choosing the right combination for the tuple $(\text{\textit{number\_of\_points}}, \text{\textit{window\_size}}, \text{\textit{stride}})$. However, the most efficient variant might not necessarily be the best one regarding the model's performance.%%DomingoMaster: Añadido algo para explicar más de que hallar los puntos optimos puede ser más complicado.
+This has to do with the fact that the method to find optimal point sets is only based on the performance, not on other considerations which could be introduced in the algorithm, like taking into account that less dense sections require less crops. Also, there are other considerations regarding the balance of window size and number of samples which affects the final results. We defer this discussion to the last chapter.
+
+
+
+
+
+
+
