@@ -148,9 +148,9 @@
   {\vspace{2cm}}\vspace{2cm}\par%\fuented Facultad\\ de\\ Ciencias}\vspace{2cm}\par
   {\fuentee \@titulo}\vspace{5mm}\par
   {\fuentec \@ingles}\vspace{2cm}\par
-  {\fuentea Trabajo de Fin de Máster\\ para acceder al}
+  {\fuentea Trabajo de Fin de Grado}
   \vspace{1cm}\par
-  {\fuenteb MÁSTER EN CIENCIA DE DATOS}
+  {\fuenteb Trabajo de Fin de Grado}
   \end{center}
   \vfill
   \begin{flushright}
@@ -221,7 +221,7 @@
                     numbers=left,label=#3,#1]{#2}}%
   \end{minipage}\vspace{4mm}
 }
-\RequirePackage[english,ruled]{algorithm2e}
+\RequirePackage[spanish,ruled]{algorithm2e}
 
 % Otros %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -241,7 +241,7 @@
 }
 
 \RequirePackage{graphicx}
-\RequirePackage[english]{babel}
+\RequirePackage[spanish]{babel}
 \frenchspacing
 
 % Términos en español %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

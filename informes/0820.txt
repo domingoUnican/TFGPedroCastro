@@ -1,2 +1,14 @@
+EXPLICAR BIEN TODO ESTO, PONER EJEMPLOS, PONER URL AL CODIGO
+PROXIMA VEZ: TODO EL CONTENIDO, CON REFERENCIAS, MEMORIA CASI TERMINADA
+TODO: poner tabla de complejidades temporales string search (knuth morris pratt del libro)
+COSAS QUE PONER: Ejemplo Berlekamp Massey y ejemplo complejidad no lineal
 con el compilador, cuando genere codigo, de enteros o binarios, que intente optimizar las formulas. Funcion añadida del compilador que te comprime una secuencia de bits, (hacer zip, LZ78, muy parecido al fsr, ). 
 Domingo: describir eigenvalue, y su relacion con los eigenvector y los eigenvalue algebra
+Caracterisitica principal: COMPILADOR + COMPRESION
+Implementar funcion compresion, como llamada a la funcion, 
+Sugerencia apartado: sacas el poliniomio fsr y esto lo vuelves a comprimir, y comparar con zip.
+Sugerencia: azure y meter un trabajo
+Graficas: - parametros en funciones booleanas
+          - compresion
+
+Tareas: mirar TFG's de otros compañeros, el compilador tokenizador -> parser -> checker -> generate_llvm. 

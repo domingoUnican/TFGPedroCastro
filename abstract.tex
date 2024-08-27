@@ -1,9 +1,18 @@
-%Stereology is the science of geometric sampling and it allows to estimate quantities using formulas that usually include expectations. In this work we tried to improve stereology estimators by approximating the expectations using QMC integration with $N$ optimal points that minimize the worst case error in the reproducing kernel Hilbert space $H_{mix}^1$. This process should provide estimators with low variances, improving the quality of the estimated quantity.\\
-%In order to test this process we selected three known test systems, namely the test system of quadrats, the Buffon test system and the Buffon-Steinhaus test system, and implemented it in python code for each one of them.\\
-%The computed results led us to think that this process might perform differently depending on the isotropy, anisotropy or symmetry that the object whose quantity we estimate has. %Also, it's possible that changing a certain parameter $\gamma$ (see \cite{Hinrichs.pdf}) may provide better results when using that process, but it still gives low error accurate estimators.\\
-(tiempo presente, primera persona del plural, hablando de lo que se ha conseguido en el TFG)
-Stereology is the science of geometric sampling and it allows to estimate quantities using formulas that usually include expectations. Artificial Intelligence is a discipline in computer science that encompasses several different processes concerned with making machines smart. In this work we combined both Stereology and AI in order to test a new method for Crowd Counting, a field that revolves around the estimation of the number of individuals in images or videos. Our method's approach considers a modified test system of quadrats whose quadrats are only located at the points contained in an Optimal Point Set that minimizes the worst case error for Quasi-Monte Carlo Integration. By superimposing the system to an image and cropping that image by the quadrats, we can then use an AI model to count individuals on each crop, subsequently using Equations \ref{Conteo_usada} and \ref{QMC} to estimate the total count value of individuals in the original image. The chosen AI model to test our method was CLIP-EBC, as it is a public model and one of the best performing models in crowd-counting. The computed results for the validation metrics MAE and RMSE shows promising results.
-%%DomingoMaster: Creo que da un poco repetitivo.
-%however, the best variant tested for our method is not far from performing in a similar level to that of the state-of-the-art methods in Crowd Counting. 
-An additional benefit is  the computing times obtained for that variant are significantly lower than those obtained by the most optimised performing methods, CLIP-EBC.\\
+In this final degree project, an interpreter for the Begone language, a programming language proposed by David M. Beazley, is created. The goal is for this implementation to be used in the course "Programming Languages."
 
+The student carries out this implementation in Python, performing the following tasks:
+
+\begin{itemize}
+  \item Defines specifications of the tokens and implementation using regular expressions
+  \item Defines an unambiguous context-free grammar for the Begone language
+  \item Uses libraries to generate native code with the compiler
+\end{itemize}
+
+Additionally, this language has native functions for file compression, based on feedback registers, which are as efficient as possible. These functions:
+
+\begin{itemize}
+  \item Allow the compression and decompression of files in different formats (e.g., text, binary).
+  \item Use feedback registers to optimize compression based on usage patterns and common data types.
+  \item Provide a simple interface for users to easily integrate these functions into their programs written in Begone.
+
+\end{itemize}
