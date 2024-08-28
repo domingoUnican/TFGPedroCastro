@@ -1,0 +1,9 @@
+1.
+Probar caso en el que tienes un comentario sin nada 
+//
+Para saber si lo tokeniza bien el tokenizer, es decir si lo omite
+
+2.
+Con el actual compilador, no se reconoce bien la instruccion print '';
+se detecta como fallo de sintaxis
+

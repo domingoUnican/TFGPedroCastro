@@ -1,0 +1,22 @@
+1. Funcion EigenValue
+hace un mirror de la cadena original hasta n-1 eso lo pasa a la funcion knuth morris pratt
+donde pasa como args, la cadena mirrored 1 hasta n -1 (text) y con la cadena mirrored 0 hasta n - 1 (suffix).
+
+Para despues hacer n - KnuthMorrisPratt(text,suffix)[0])
+La clave de esto es que la funcion KnuthMorrisPratt siendo len(text) = len(suffix) - 1 y siendo len(suffix) = n, como mucho la funcion te puede devolver n-1 
+Entonces lo que devuelve la funcion esta limitado al intervalo (n-n+1, n) = (1, n-1)
+
+2. Funcion KnuthMorrisPratt
+devuelve una tupla de dos posiciones en la que 
+la primera posicion es cuanto del patron se han encontrado en el texto
+la segunda posicion es la posicion de la primera coincidencia del patron (este dato no se usa en nuestra algoritmo)
+
+3. Discrepancia metodo de la clase ESOP (Exclusive Sum of Products) (s, n)
+En teoria, lo que creo que he entendido que hace esto es usar la funcion de feedback (h) de n-1 para intentar generar n, si falla, se le suma un minterm que corrige la funcion de feedback (h) o se le añade el minterm de la tupla m+k,  esto tiene que ver con un teorema del paper.
+valores = cola de s desde n-self.m hasta n+1, siendo m la complejidad no lineal de la secuencia
+result = valores.pop(), es decir siempre va a ser la posicion s[n-self.m]
+devuelve XOR(result, self.evaluate(valores))
+
+3.1 self.evaluate
+especie de operacion iterativa en la que haces un xor entre los valores de la discrepancia y los coeficientes del polinomio
+
