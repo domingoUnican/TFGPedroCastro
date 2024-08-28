@@ -1,408 +1,125 @@
-\section*{Linear Feedback Shift Register (LFSR)}
-El \textit{Linear Feedback Shift Register} es una técnica para cifrar una secuencia binaria, o para generar una secuencia aleatoria de dígitos, a partir de una semilla y un polinomio de \textit{feedback}, también llamado polinomio (\textit{LFSR}). Cabe destacar, lo increíblemente simple que es, para lo complejos que pueden llegar a ser los output a los que da salida este algoritmo. \\\\
-Para ser más precisos teniendo una cadena binaria
-\[ b = \{b_0, b_1, ... , b_n\}\]
-Siendo \(n\) el numero de bits del estado inicial del LFSR, se aplicará sobre esta cadena un xor sobre ciertas posiciones de tal manera que nos de como output el bit en la posicion 0, del nuevo estado de la cadena/secuencia.\\\\
-A las posiciones sobre las que se aplica el xor se les llama según la literatura científica \textit{taps}. Así que teniendo la secuencia \(b\). Y por ejemplo, \textit{taps} en las posiciones 0, 1 y 4. Siendo \(b>=4\). El siguiente estado de la secuencia se computará de esta manera
-\[ b'_0 = b_0 \oplus b_1 \oplus b_4 \]
-\[ b = \{b'_0, b_0, b_1, b_2, b_3, b_4, ..., b_{n-1}\}\]
 
-A continuación, mostraré un pseudocódigo general para poder implementar cualquier lfsr programáticamente.\\ 
-PSEUDOCODIGO -> queda por hacer
-\\
-MENCIONES A FIBONACCI LFSR Y galois LFSR. 
-\\
-
-TODO LO SIGUIENTE DEBE REDACTARSE BIEN!! \\
-La implementación es extremadamente rápida en hardware ya que las operaciones necesarias para generar las secuencias, son dos, desplazamientos y xor. \\
-
-La aleatoriedad estadística de una cadena generada por LFSR es muy buena, es decir, parece una secuencia aleatoria de digitos. Aunque no se debe utilizar para criptografia o al menos no esta técnica unicamente sin enrevesarlo un poco mas, ya que es facil hacer ingeniera inversa y sacar el polinomio de \textit{feedback} y la secuencia inicial a traves de ecuaciones lineales, si consigues una porción lo suficientemente grande de la secuencia aleatoria. \\
-
-(Nota para el futuro) existen maneras matemáticas de saber que secuencia necesitas con que taps para poder sacar el periodo maximo de la secuencia inicial (investigar mas a fondo para escribirlo), el periodo maximo es en caso de 4 bits igual a 16 - 1 = 15 ya que la cadena de 0 nunca se alcanza, porque entraria en bucle infinito y no saldria de la cadena de 0s.
-(Ejemplo de funcionamiento LFSR para cifrar un mensaje)
-
-
-\section*{Algoritmo de Berlekamp-Massey}
-Antes de pasar al algoritmo que trataremos de optimizar, debemos explicar el algoritmo en el que se basa este es el algoritmo de \textit{Berlekamp Massey}. El algoritmo original, Berlekamp, del que deriva Berlekamp Massey, fue creado para decodificar códigos BCH (Bose-Chaudhuri-Hocquenghem), estos códigos se utilizan para encriptar información de manera redundante por si hubiera algún fallo en la transmisión o en el almacenado de los datos poder corregirlos a través de Forward Error Correction (FEC). \\\\
-El algoritmo de Berlekamp-Massey, también llamado por su creador James Massey, \textit{LFSR Synthesis Algorithm (Berlekamp iterative algorithm)}, es capaz de encontrar la recurrencia lineal más corta para cualquier secuencia numérica finita. Esto tiene mucho que ver con la modificación de este algoritmo que utilizaremos para calcular la complejidad no lineal de un secuencia binaria con FSR. \\\\
-Para entender esta técnica primero explicaré y escribiré las demostraciones del algoritmo para encontrar la recurrencia lineal mas corta para cualquier secuencia de números en base decimal. (Escribir demostraciones y la funcion correctora d, que explica en el articulo etc), aquí está el pseudocódigo.
-
-
-
-\begin{algorithm}
-\caption{Algoritmo Berlekamp-Massey}\label{alg:two}
-\KwData{$s$ secuencia binaria}
-\KwResult{El LFSR mínimo}
-$c \gets [ \ ]$\;
-$oldc \gets [ \ ]$\;
-$f \gets -1$\;
-\For{$i = 0; i < len(s); i++$}{
-  \eIf{$f == -1$}{
-     $c \gets resize(c, i+1)$\;
-     $f \gets i$\Comment*[r]{Para la primera vez}
-  }{
-  $d \gets - oldc$\;
-  $d.insert(0,1)$\;
-  $df1 \gets \sum_{j=1}^{len(d) + 1}d_{j-1}*s[f+1-j]$\;
-  $coefficient = \frac{delta}{df1}$\;
-  $d \gets d*coefficient$\;
-  $d \gets \texttt{addzerostoleft(i-f-1, d)}$\Comment*[r]{suma i-f-1 ceros a la izq}
-  $copyc \gets c$\;
-  \If{\(len(c) > len(d)\)}
-  {
-   $c \gets \texttt{addzerostoright(len(d) - len(c), d)}$
-  }
-  
-  }
+Hoy en día es sencillo para cualquier persona con la suficiente motivación aprender a programar. De hecho, para programar en \textit{JavaScript} (ECMAScript) utilizando un entorno de ejecución como \textit{NodeJS} sobre un framework como \textit{React}, ni siquiera necesitas conocimientos sobre \textit{hardware}, ni saber como se gestiona la memoria, ni hasta cierto punto la naturaleza de un "puntero". Sin embargo, podríamos decir que estarías "programando". Creo que cada vez es más accesible y tenemos más herramientas para poder plasmar nuestras ideas a través de la propia programación, y a la vez tanta abstracción nos aleja de la cantidad de pasos que hay detrás de cada línea de código.\\\\
+La primera vez que intente programar tenía trece años, e intente aprender \textit{Java} mediante unos tutoriales de \textit{Youtube}. En uno de los primeros vídeos, explicaba como se compila el código y las fases que atraviesa hasta convertirse en código máquina. Allí, lo explicaban de manera muy sencilla, primero tienes el código fuente, ese código se transforma en \textit{bytecode} (o código intermedio), y ese \textit{bytecode} pasa por una máquina virtual (JVM, Java Virtual Machine) para convertirse en código máquina. Resulta que el proceso de compilación me llamó la atención, y es por esto que he escrito mi propio ``mini''  lenguaje, al que he llamado GoneFSR, siguiendo las instrucciones y la estructura que propone David Beazley en su curso.\\\\
+En las siguientes subsecciones analizaremos cada parte que compone el compilador. Cuando compilas código en GoneFSR, el compilador pasa por varias etapas: análisis sintáctico, análisis semántico, análisis de errores, generación de código intermedio y generación de código llvm (Low Level Virtual Machine). Ese código llvm será traducido a un ejecutable por CLANG, como último paso. A continuación veremos que significa todo esto, además de algunos detalles sobre la implementación de cada etapa.
+\section{Análisis léxico}
+En un idioma cualquiera,  el léxico se entiende como el conjunto de palabras y expresiones que pertenecen a esa lengua. Al módulo del compilador, encargado del análisis léxico se le suele llamar \textit{Lexer}. Y su función, es por consiguiente asegurarse de que todas las palabras del archivo de entrada, pertenecen al lenguaje de programación. Para poder llevar a cabo este proceso, el \textit{Lexer} divide la cadena de texto de entrada en \textit{tokens}. Una vez dividida, comprueba que cada \textit{token} sea una palabra válida. Por \textit{token} se entienden tanto funciones, como tipos, como valores. Aunque la función principal del \textit{Lexer} es validar, también se encarga de ignorar algunos caracteres que no necesitamos que se traten como \textit{tokens} para que estos no pasen a la segunda fase, que sería el \textit{parsing} o análisis semántico, un buen ejemplo de esto son los caracteres de salto de línea, o los comentarios.\\\\
+En GoneFSR, hay cuatro tipos distintos de datos. Números enteros (int) de 32bits, números decimales (float), este tipo de dato normalmente se asocia a números de coma flotante 32 bits, pero en este lenguaje en la fase final de compilación se mapean a double (64 bits) en las instrucciones llvm. Booleanos, que en realidad se tratan como enteros después de la traducción a código intermedio, siendo uno verdadero, y cero Falso. Y por último, char, que es simplemente un único carácter estando permitidos cualquier letra o número, además de caracteres especiales como \textbackslash, \textbackslash n, \textbackslash ", \textbackslash xhh (siendo hh cualquier valor hexadecimal lo que permite representar cualquier carácter ASCII).\\\\
+Todos las sentencias en GoneFSR, deben acabar en ";", como por ejemplo en lenguajes como C, o Java. En este lenguaje existen variables mutables e inmutables, para las inmutables o constantes no es necesario especificar un tipo de dato ya que se infiere del propio dato. La sintaxis para constantes sería
+\[\texttt{const ID = value;}\]
+En el caso de las variables mutables si se requiere que el usuario especifique un tipo de dato en concreto de los cuatro disponibles. La sintaxis sería
+\[\texttt{var ID datatype = value;}\]
+Las operaciones binarias disponibles en el compilador tanto para enteros como para decimales son: suma, resta, multiplicación y división. Siguiendo el estándar cada una de ellos se asocia con los símbolos +, -, *, /, respectivamente.\\\\
+El compilador cuenta con las siguientes operaciones condicionales para después con las sentencias condicionales ("conditional statements") poder  bifurcar el código, menor que ($<$), mayor que ($>$), menor o igual que ($\leq$), mayor o igual que ($\geq$), igual que (==) y no igual que (!=), todas estos operadores funcionan tanto para int como para float, pero no se pueden comparar entre tipos, siempre tienen que ser comparaciones entre el mismo tipo, ya que en este lenguaje no están implementados los \textit{castings} a otros tipos. Las comparaciones entre booleanos son las siguientes: igual que (==), no igual que (!=), "y" ($\And\And$) y "o" ($||$).\\\\
+El símbolo + y -, también actúan como operadores unarios para int y float, para especificar cuando un número es positivo o negativo. Para lo booleanos existe el operador unario !, el cual sirve para negar el valor de la variables booleana. \\\\
+\newpage
+\noindent La primera sentencia condicional es el clásico "if", el cual cuenta con una sintaxis ampliamente extendida entre otros lenguajes.
+\begin{center}
+\begin{tabular}{c}
+\begin{lstlisting}
+if (condition) {
+    statements
 }
-\end{algorithm}
-
-
-
-NOTA: Añadir nota breve de aplicaciones del algoritmo de berlekamp massey
-
-
-\begin{algorithm}
-\begin{algorithmic}
-\Procedure{BinaryBerlekampMassey (por revisar)}{s}\Comment{s = secuencia binaria}
-\State $n \gets len(s)$
-\State $k \gets \texttt{firstOnePosition(s)}$
-\State $f \gets \{k+1, 0\}$
-\State $l \gets k+1$
-\State $g \gets {0}$
-\State $a \gets k$
-\State $b \gets 0$
-\For{\(i = k+1; i < n; i++\)}
-\State $d \gets 0$
-\For{\(j = 0; j < len(f); j++ \)}
-    \State $d \gets d \oplus f[j]$
-\EndFor
-\If{\(d == 0\)}
-\State $b \gets b + 1$
-\State $continue$
-\EndIf 
-\If{\(2 * l > n\)}
-\begin{comment}
-Seccion por pulir hasta aclarar el sentido de la diferencia simetrica de conjuntos en este algo
-\State $h \gets( \{ a - b + it for it in g \}$
-\State $f \gets f \symdif h$
-\end{comment}
-\EndIf
-\EndFor
-\EndProcedure
-\end{algorithmic}
-\end{algorithm}
-
-\section*{Compresión de secuencias binarias con FSR (paper central domingo, non linear complexity)}
-NOTA: Puede que sea importante explicar que es, y la conexion con el Lempel Ziv Compression (mas bien con los eigenvalue y su conexion con la complejidad no lineal)\\\\
-(PARRAFO A REVISAR)El objetivo de este proyecto desde un principio fue intentar mejorar el algoritmo que se propone en []. Para conseguir reducir el polinomio que genera la secuencia a través de técnicas que veremos más adelante.\\\\
-En esta sección, se tratará de explicar el algoritmo que nos genera el polinomio a reducir. Este algoritmo consigue traducir el famoso algoritmo explicado anteriormente, Berlekamp-Massey, el cual resuelve eficientemente el calculo del LFSR minimo que genera una secuencia en concreto, a los Non-Lineal Feedback Shift Register. Es por esto, que los polinomios que produce este algoritmo son de carácter no lineal, es decir que utiliza tanto la operación XOR como la operación AND.\\\\
-Antes de describir el algoritmo, debo hacer un breve resumen sobre la notación que utilizaré durante esta sección para describir conceptos como una secuencia numérica cualquiera. La notación está basada en la del artículo original. Pero creo que es necesario, plasmarlo aquí, para una mejor lectura de esta parte del trabajo. Para definir un \textit{minterm} usaremos la notación, $\underline{x_b} = x_1^{b1} ,..., x_n^{bn}$, donde $b = (b_1,...,b_n) \in \mathbb{F}_2^{n}$, siendo $x_i^0 = x'_i$ y $x_i^1 = x_i$, por ejemplo, el \textit{minterm} de la secuencia 011 es $x'_1x_2x_3$. Para las cadenas o secuencias, usaré la siguiente notación, diremos que una secuencia binaria de $N$ elementos se escribe $y^{N}$. Si queremos describir un segmento de esa secuencia, escribiremos $y_{i}^{j}$ siendo $i\leq j \leq N-1$. Esto es así porque trataremos las posiciones de las secuencias como si fuesen \textit{arrays} o listas en cualquier lenguaje de programación, es decir, siendo la posición inicial el 0. Definimos la complejidad no lineal de una cadena como $c(y^{N})$. (NOTA: puede que queden más cosas, por ahora lo dejo así...)\\\\ 
-Ahora desglosaremos paso por paso el algoritmo y señalaremos las similitudes entre Berlekamp-Massey y este algoritmo. En la figura X se muestra el pseudocódigo del algoritmo.\\\\
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Procedure{MinimalFSR}{s}\Comment{s = cadena binaria}
-\State $k \gets 0$
-\State $m \gets 0$
-\State $h \gets y_0$
-\For{\(i \gets 1,...,N-1\)}
-\State $d \gets y_i - h(y_{i-1},...,y_{i-m})$
-\If{\(d \neq 0\)}
-\If{\( m = 0 \)}
-\State $k \gets i$
-\State $m \gets i$
-\ElsIf{\(k \leq 0\)}
-\State $t \gets \texttt{Eigenvalue\((\,y^{i})\,\)}$
-\If{\(t < i + 1 - m\)}
-\State $k \gets i + 1 - t - m$
-\State $m \gets i + 1 - t$
-\EndIf
-\EndIf
-\State $f \gets (x_{1} + y'_{i+1})...(x_m+y'_{i-m})$
-\State $h \gets h + f$
-\EndIf
-\State $k \gets k - 1$
-\EndFor
-\EndProcedure
-\end{algorithmic}
-\end{algorithm}
-\\
-Empezaremos definiendo algunas de las variables y su significado. La variable $k$ está denominada salto y es la distancia entre $c(y^{n})$ y $c(y^{n-1})$. Uno de los teoremas del artículo prueba [X, pp 2] que (falta explicar un poco el por que de esta formula y su relación con $k(y^n)$)
-\[k = n - m - (t^{(n-1)}_0 + T^{(n - 1)})\]
-Este teorema se usará en el algoritmo para el cálculo del salto. Siendo $t_0^{(n - 1)}$, el preperiodo de la secuencia $y^{n-1}$ y $T^{(n - 1)}$ el periodo de $y^{n-1}$. Es importante aclarar, que $t_0$ y $T$ son el preperiodo y el periodo en el caso de que sean los números enteros más pequeños que cumplan.
-\[y_i = y_{i+T} \ \text{para todo} \ i \geq t_0, \text{siendo} \  t_0 \geq 0, T > 0\]
-Esto realmente es una forma para los no matemáticos muy enrevesada de decir, que $T$ es la longitud del periodo y $t_0$ el índice en el cual la periodicidad comienza, y a estas dos variables se les llaman \textit{preperiodo} y \textit{periodo}. Todo esto será importante, ya que en el caso en el que el salto sea menor o igual que 0, esto podría hacer que la complejidad no lineal de la secuencia cambiara.\\\\
-Por otro lado, la variable $m$ es la complejidad no lineal de la secuencia a evaluar. Y h es la función de feedback que acabara generando la secuencia original a partir de un segmento inicial de esa propia secuencia, el núcleo del algoritmo es entender como y por qué se actualiza esta función.\\\\
-Pues bien, la clave de todo está en la variable $d$ que se recalcula en cada iteración y que llamaremos \textit{discrepancia}. El cálculo de la \textit{discrepancia} en la iteración $i$ consiste en computar si el resultado de la función de feedback ($h$) de esa iteración difiere de la posición $i$ en la secuencia. En caso de que difiera, se sumará el minterm que hace que esa posición se calcule como corresponde a la función de feedback, actualizando esta última. Cabe destacar, que no porque haya una \textit{discrepancia} tiene que aumentar la complejidad no lineal de la secuencia.\\\\
-Existen varios casos si existe una \textit{discrepancia}, el primero de ellos es que aun no se haya inicializado la complejidad no lineal de $y^{n}$, es decir, si m es igual a 0. En ese caso se les asigna tanto al salto, como a $m$ el valor de $n$, es decir la posición de la primera \textit{discrepancia}. Todo esto parece muy complicado pero con el ejemplo al final de la sección, se entenderá mucho mejor. El segundo caso, en el que $m$ no es 0 y $k \leq 0$, se calculará el \textit{eigenvalue} de la secuencia desde la posicion 0 hasta la posicion $n$. Al leer las definiciones de  \textit{eigenvalue} y \textit{eigenwords} en [x], no termine de entender a que se referían, así que fui a la fuente original el articulo ["On the Complexity of Finite Sequences"] de Abraham Lempel. Esto me ayudo a aclarar los conceptos de vocabulario, prefijos \textit{propios}, \textit{eigenvalues} y \textit{eigenwords} de una cadena $y^n$, junto con otros conceptos como historial, historial exhaustivo, reproducibilidad y producibilidad. \\\\
-Vamos a definir brevemente cada una de estas cosas, para entender bien, como y para qué necesita el algoritmo este \textit{eigenvalue}. El vocabulario de una secuencia $y^{N}$ son los subconjuntos de esa misma secuencia formado por todas las \textit{subcadenas} $y_i^{j}$ siendo $0 < i < j$ y $j < N$. Por ejemplo, de esta secuencia 01001, su vocabulario sería.
-\[v(y^{N}) = \{0, 1, 01, 10, 00, 01, 010, 100, 001, 0100, 1001, 01001 \}\]
-El siguiente paso es encontrar las \textit{eigenwords} (\textit{palabras propias}). Una palabra del vocabulario, es una palabra \textit{propia} si no pertenece a ninguno de los vocabularios de los prefijos propios (\textit{proper} prefixes) de la cadena original ($y^{N}$). Un prefijo \textit{propio} es un segmento desde $i$ hasta $j$, donde $0 < i < j < N-2$, es decir que la longitud del prefijo propio $Q$ debe ser menor que la longitud de la cadena original $y^{N}$, $l(Q) < l(y^{N})$. El conjunto de palabras \textit{propias} se le denomina vocabulario \textit{propio} ($e$)(\textit{eigenvocabulary}). El vocabulario propio del ejemplo anterior sería.
-\[e(y^{N}) = \{ 001, 1001, 01001 \}\]
-Y ahora ya tenemos la forma de calcular el \textit{eigenvalue} $k(y^N)$, pues el cardinal del vocabulario \textit{propio} es igual al \textit{eigenvalue}, $|e(y^N)| = k(y^N)$, en este caso 3. Toda este proceso tan largo, no es necesario para el calculo del \textit{eigenvalue}, hay una manera mucho más sencilla y óptima, la desarrollaremos un poco más adelante. Podéis consultar una implementación \textit{naive} de este proceso en el programa (INSERTAR LINK DEL PROGRAMA). Aunque pueda parecerlo, todo este pretexto no es arbitrario, pues con esta explicación tenemos la capacidad de entender, el por qué de la condición en el pseudocódigo, $t < n + 1 - m$. En caso de que la condición, se evalúe como cierta, esto quiere decir que siendo $m = c(y^{n-1})$, $k(y^n) < n - m$. Luego la subcadena de tamaño $m$, $y^{n-2}_{n-m-1}$ se repite dos veces con diferentes sucesores en $y^{n-1}$, esto provoca que se tenga que sumar un \textit{minterm} con una variable más al polinomio, o dicho de otra manera, corregir la función de \textit{feedback}, línea del pseudocódigo \textit{20}. Sin embargo, si la condición se evalúa como falsa, $k(y^{n-1}) >= n - m$, la subcadena $y^{n-2}_{n-m-1}$ ahora es única por lo que a pesar de que se tenga que añadir un nuevo \textit{minterm} a la función de \textit{feedback} el numero de parámetros del polinomio no aumentará, por lo que $c(y^n)$ tampoco. (nota: pordría desarrollar esto un poco mas).\\\\
-Hay un punto que hemos pasado por alto, se trata de la función de la variable $k$ (\textit{salto}) en el pseudocódigo. La función principal de esta variable en el algoritmo es ahorrarnos el cálculo del \textit{eigenvalue} en momentos en los que no es necesario calcularlo ya que sabemos que no han pasado suficientes iteraciones como para que pueda haber otro \textbf{salto} en la complejidad no lineal. Esta variable solamente condiciona el flujo del programa en el \textit{if} $k <= 0$, y como se puede observar se resta 1 a esta variable por iteración, y cuando es menor o igual a 0, se le asigna la diferencia entre $c(y^n)$ y $c(y^{n-1})$. Esto en realidad, se hace para que tengan que pasar $c(y^n) - c(y^{n-1})$ iteraciones, hasta que pueda darse un nuevo salto en la complejidad ya que a partir de esas iteraciones es cuando \textbf{podrían} aparecer 2 subcadenas de longitud $m$ con diferentes sucesores, es en ese momento donde el cálculo del \textit{eigenvalue} cobra relevancia.\\\\
-Con todo este conocimiento previo, vamos a analizar un ejemplo en el que iremos explicando paso a paso, que hace el algoritmo. Tomando la secuencia binaria $y^{10} = 1101010011$, antes de entrar al bucle $k$ y $m$ serán 0. Y $h(x) = y_0 = 1$, téngase en cuenta que al contador/iterador lo llamaremos $i$ por comodidad. \\\\
-En la primera iteración del bucle: \\
-\(i=1 \quad y_1 = 1 \\
-\text{Calculo de la discrepancia de $y^1 = 11$:}\\
-\text{$h(1) = 1$, en este momento, h(x) es una función constante}\\
-\text{¿es $h(1)$ igual a $y_1$?, sí, por lo que no hay discrepancia}\\
-\text{$k = k - 1$, y seguimos adelante}
-\)\\\\
-En la segunda iteración del bucle: \\
-\(i=2 \quad y_2 = 0 \\
-\text{Calculo de la discrepancia de $y^2 = 110$:}\\
-\text{$h(1) = 1$, h(x) sigue siendo una función constante}\\
-\text{¿es $h(1)$ igual a $y_2$?, No, así que tenemos nuestra primera \textbf{discrepancia}}\\
-\text{Al ser la primera discrepancia, $m = 0$, así que}\\
-m = i  \quad k = i \\
-\text{\textbf{Importante}, toca corregir nuestra función \textit{fsr}, añadiendo el \textit{minterm}} \\
-\underline{x_{\{ 11 \}}} = x_0*x_1 \\
-h(x) = h(x) + \underline{x_{\{ 11 \}}} = 1 + x_0*x_1 \\ 
-\text{Y como en todas las iteraciones, }\\
-\text{$k = k - 1$}
-\)\\\\
-Antes  pasar a la siguiente iteración, quería hacer un apunte, parece una tontería pero es que gracias al evaluar la función en modulo 2. Es muy simple e intuitivo que al añadir el \textit{minterm} de esa posición, la función se corrija. Ya que si antes te daba 1, con el \textit{minterm} (pues el minterm equivale a 1, en esa posicion de la cadena) cambiará a 0, y viceversa.\\\\
-En la tercera iteración del bucle: \\
-\(i=3 \quad y_3 = 1 \\
-\text{Calculo de la discrepancia de $y^3 = 1101$:}\\
-\text{La subcadena que servirá como input hay que darle la vuelta para que coinci- }\\
-\text{da con el orden de las variables.}\\
-y^{3-1}_{3-m} = y^2_{1} = 10 \\
-\texttt{reverse($y^2_{1}$) = 01} \\
-h(x_0=0, x_1=1) = 1+0*1 = 1\\
-\text{¿es $h(01)$ igual a $y_3$?, Sí, no se realizan cambios en $h(x)$}\\
-\text{$k = k - 1$}                      
-\)\\\\
-\\\\
-En la cuarta iteración ocurre una \textit{discrepancia} que no cambia la complejidad no lineal $m = c(y^n)$, tan solo añade a la función $h$ el \textit{minterm}, $x_0*x'_1$. En la quinta y sexta no hay discrepancias. Sin embargo, en la séptima iteración ocurre lo siguiente\\\\
-\(i=7 \quad y_7 = 0 \\
-\text{Calculo de la discrepancia de $y^7 = 11010100$:}\\
-y^{7-1}_{7-m} = y^6_{5} = 10 \\
-\texttt{reverse($y^6_{5}$) = 01} \\
-h(x_0=0, x_1=1) = 1+0*1+0*(1+1) = 1\\
-\text{¿es $h(01)$ igual a $y_7$?, No}\\
-\)\\
-Ya que hay más de una subcadena $y^{i-1}_{i-m}$ con distintos sucesores, hay que aumentar la complejidad no lineal $m$, en concreto $y^6_{5}$ se repite 2 veces previamente pero con el mismo sucesor. En esta iteración es la tercera vez que se repite la subcadena pero se da una discrepancia. 
+\end{lstlisting}
+\end{tabular}
+\end{center}
+Para escribir un "if else",
+\begin{center}
+\begin{tabular}{c}
+\begin{lstlisting}
+if (condition) {
+    statements
+}
+else {
+    statements
+}
+\end{lstlisting}
+\end{tabular}
+\end{center}
+Por último, en caso de querer escribir un bucle, GoneFSR, tan solo cuenta con el bucle "while", que se escribiría con la sintaxis.
+\begin{center}
+\begin{tabular}{c}
+\begin{lstlisting}
+while (condition) {
+    statements
+}
+\end{lstlisting}
+\end{tabular}
+\end{center}
+Ya solo nos queda por ver como se declaran las funciones. Las funciones en GoneFSR siempre tienen que retornar un tipo de dato, ya que no existe el tipo de dato void como en C. Todos los flujos de cualquier función escrita deben retornar algo, si no el \textit{checker} lo evaluará como un error, el mecanismo para lograr esto es bastante interesante, en la sección análisis de errores, veremos como está implementado en detalle. Todo código que este escrito fuera de una función, se considera \textit{global}, aún no lo había mencionado pero en GoneFSR sí esta implementado un \textit{scope} propio para cada función así que cada una tiene su propio espacio para las variables. A nivel interno, por como está construido el compilador valore que la mejor opción era agrupar todo el código escrito fuera de una función y escribirlo en una función llamada "\textit{premain}", para luego en la función \textit{main} escribir como primera instrucción la llamada a esta función \textit{premain}. En GoneFSR las funciones se escriben tal que así
+\begin{center}
+\begin{tabular}{c}
+\begin{lstlisting}
+func function_name (*arguments) return_datatype {
+    statements
+}
+\end{lstlisting}
+\end{tabular}
+\end{center}
+En GoneFSR, hay dos funciones "built-in", es decir las puedes llamar sin necesidad de importar nada, "print" y "intToFsr". Desgraciadamente GoneFSR, no cuenta con implementaciones de gestor de módulos, ni \textit{garbage collection}, ni control de importaciones circular, ya que al fin y al cabo, no deja de ser un compilador con un propósito educativo.\\\\
+\newpage
+\noindent ¿Pero, cómo se distingue cada token, cómo se distingue un "if" de un  "print"?, pues bien, en este caso haremos uso de la librería o mejor dicho, módulo de Python llamado SLY (Sly Lex Yacc). Esta librería que a su vez de dos herramientas muy conocidas llamadas lex y yacc (Yet Another Compiler Compiler), nos facilita el desarrollo de tanto lexers como parsers para el desarrollo de compiladores. Concretamente, nos facilita dos clases  \textit{Lexer} y \textit{Parser}, que nos harán más amigable el proceso de parsing y tokenizado del código fuente de nuestro lenguaje. \\\\
+Pero, para abstraernos del código, explicaré lo esencial de la implementación del \textit{Lexer}. La clave está en las expresiones regulares, más conocidas como REGEX, estas nos permitirán buscar patrones y encontrar los tokens que queremos. Si ya se ha leído la parte del articulo en la que se explica el algoritmo de \textit{Knuth Morris Pratt}, podrías llegar a pensar que en las expresiones regulares al consistir también en búsquedas de patrones sobre texto, se usaría por debajo este mismo algoritmo. Sin embargo, nada más lejos de la realidad, para las expresiones regulares se utilizan algoritmos de autómatas finitos determinísticos y no determinísticos. Dominar las expresiones regulares es complejo, hay muchas reglas que debes conoces, muchas caracteres que dependiendo del contexto significan una cosa u otra: grupos de captura, contenedores, "lookahead" con condiciones, caracteres comodín, etc... \\\\
+Describir el funcionamiento de estos, me llevaría probablemente otras diez páginas así que consideraré que con decir que es a través de estas expresiones regulares como distinguimos entre \textit{tokens}, es suficiente. Para que no queden sin explicar, pondré un ejemplo, cómo distinguimos los int o enteros.
 \[
-{\text{\large $10 \quad \textcolor{green}{\xrightarrow{}} \quad 10 \quad \textcolor{green}{\xrightarrow{}} \quad 10 \quad \textcolor{red}{\xrightarrow{}} \quad 0$}}
+\texttt{INTEGER = r'0x[a-f0-9]+|0o[0-7]+|0b[10]+|d+'}
 \]
-Al darse este caso, el \textit{eigenvalue} será menor que $n + 1 - m$. Por lo que se actualizará el $k$ y $m$. \\
-\(
-k = n + 1 - t - m \\
-m = n + 1 - t \\
-\text{El siguiente paso es sumar el \textit{minterm} con $m$ ya actualizada, por lo que }\\
-\underline{x_{\{ 01010 \}}} = x'_0*x_1*x'_2*x_3*x'_4 \\
-h(x) = h(x) + \underline{x_{\{ 01010 \}}} = 1 + x_0*x_1 + x_0*x'_1 + x'_0*x_1*x'_2*x_3*x'_4\\ 
-\text{Y al final de la iteracion, }\\
-k = k - 1                     
-\)\\\\
-(Falta una pequeña explicacion de por k = n + 1 - t -m y m = n + 1 - t)\\
-En la octava iteración no se dan discrepancias. Y por último, en la novena se da una discrepancia que no aumenta $m$, sumando el minterm $x_0*x'_1*x'_2*x_3*x'_4$. Aquí termina el ejemplo, habiendo recorrido toda la cadena, y quedando una función final de feedback tal que así 
-\[h(x) = 1 + x_0*x_1 + x_0*x'_1 + x'_0*x_1*x'_2*x_3*x'_4 + x_0*x'_1*x'_2*x_3*x'_4 \]
-Con esta función podríamos a partir de los primeros 5 digitos de la secuencia recuperar la secuencia entera, aplicando la función de feedback, añadiendo el resultado a la derecha y recalculando. Este proceso debe repetirse, siendo $w$, el numero de parámetros de la función de feedback y $r$, la longitud original de la cadena. Se aplicará el proceso $r - w$ veces, para conseguir la secuencia original. Podéis consultar también el decodificador, que he escrito en Python en (LINK AL PROGRAMA). 
+\noindent Para aquellos entendidos en expresiones regulares, sabrán que hay un detalle que me he saltado sobre los enteros. Y es que un entero puede escribirse sobre diferentes bases, se puede escribir, en base diez, en base dos (binario), en base ocho (octal) y en base dieciséis (hexadecimal). En la expresión regular se puede distinguir que se define como un entero la cadena '0x' seguida de al menos un (símbolo +) carácter 'a', 'b', 'c', 'd', 'e' y 'f' o de un dígito del cero hasta el nueve. Con esta configuración no se aceptaran como caracteres hexadecimales aquellos escritos con letras mayúscula, esto es una decisión arbitraria, ya que sería fácil admitirlos. Con el carácter '$|$' especificamos un 'or' en la expresión es decir que también pueden admitirse escritos en octal (comenzando con '0o' y seguidos de al menos un dígito del cero al siete), escritos en binario (comenzando con '0b' y seguidos de al menos un dígito del cero al uno), o escritos en decimal que es lo que quiere decir la subcadena 'd+', es decir al menos un dígito del cero al nueve. \\\\
+Para cada uno de los \textit{tokens} del lenguaje hay una expresión regular que lo describe, para consultar todas las expresiones regulares, tenéis el código original en [LINK AL TOKENIZER].
 
-\section*{Como encontrar el \textit{eigenvalue} de manera óptima}
-Esta métrica es esencial en nuestro algoritmo previo, y ya hemos descrito anteriormente como calcularla de la manera más sencilla o "\textit{naive}". Sin embargo, en el articulo original [X, On the non linear compl....], indican que la manera más eficiente de calcular el \textit{eigenvalue}, es mediante el algoritmo de \textit{Knuth Morris Pratt}. Este algoritmo nos permite buscar con una complejidad temporal muy buena, un patrón en una cadena a la que llamaremos texto. \\\\
-El algoritmo consta de dos partes, la primera, la llamaremos \textit{preprocesado}, la cual tiene una complejidad temporal $O(m)$, siendo $m$ la longitud del patrón. En esta sección, se calcula una tabla a la que normalmente se le llama \textit{longest proper boundary table}. Esta tabla, en términos prácticos, será una lista en la que cada posición indica el \textit{longest proper boundary} de ese carácter o dígito dependiendo del tipo de cadena a la que le apliquemos el algoritmo. Este valor, representa el tamaño de la subcadena más larga que es a la vez prefijo y sufijo de la cadena hasta el índice de esa posición del patrón. Esta tabla o lista, después nos ayudará en la segunda parte del algoritmo pues a \textit{grosso modo}, nos permitirá "recordar" que parte del patrón nos coincide en cada iteración.\\\\
-En la segunda parte, recorremos el texto, ese bucle evidentemente tendrá complejidad $O(n)$, siendo $n$ la longitud del texto. Y lo que haremos, en realidad, es bastante simple, se recorre el texto y el patrón a la vez con dos índices distintos, $i$ para el texto y $j$ para el patrón, mientras los caracteres del texto y del patrón coincidan, ambos avanzan a la misma velocidad. Pero, cuando no coinciden si el patrón ha coincidido parcialmente con la parte del texto que se itera en ese momento, entonces es cuando entra la lista $lpb^m$ en acción. Ya que, se le asignará al índice el valor de $lpb_{j - 1}$, y  no aumentará $i$ en esa iteración. Retrocediendo el índice del patrón hasta $lpb_{j-1}$, lo que se consigue es ahorrar en iteraciones pues a pesar de que no haya coincido en ese carácter puede que coincida más atrás del patrón. En el caso, de que el patrón coincida completamente en el texto, el índice $j$ se le asigna $lpb_{m-1}$, puesto que la cuenta de coincidencia del patrón puede empezar en el índice $lpb_{m-1}$.\\\\
-A continuación, tenéis una implementación general de este algoritmo, que devuelve si el patrón se encuentra o no en el texto, no es difícil imaginar que también puedes devolver el numero de coincidencias del patrón en el texto, que es justo lo que nos interesa para el \textit{eigenvalue}. La implementación que se utiliza en el proyecto [link al codigo, knuth] es un poco diferente, pero los principios son los mismos.\\\\
+
+
+
+\section{Análisis semántico}
+Un \textit{token} no es nada por si solo, lo que lo define es como se relaciona con los otros \textit{tokens}. La definición de las relaciones entre tokens se le llama gramática. Y es en el \textit{Parser} donde hay que establecer las reglas de esta gramática. Estas reglas serán las que le den forma al AST (Abstract Syntax Tree) de cada programa de nuestro lenguaje, más tarde explicaremos qué es y pondremos un ejemplo de un AST.\\\\
+Nos basaremos en la notación BNF (Backus Naur Formalism) para definir nuestra gramática libre de contexto, esta es la parte más importante, pues si todas las reglas están bien escritas pasarlo al \textit{Parser} será sencillo. Sin embargo, en este paso es fácil quedarse atascado pues hay que ser meticuloso con cada regla que escribes, ya que si no defines una buena estructura para el AST, los siguientes pasos pueden hacerse sumamente tediosos. \\\\
+En el apéndice podéis consultar las reglas de la gramática. No entraré en detalles de la implementación pues si entiendes la gramática, entender la estructura de la clase \textit{Parser} es sencillo. Debo mencionar que esta sección del compilador realmente son dos clases en el proyecto, evidentemente, una de ellas es la clase \textit{Parser} que hereda directamente de la clase \textit{Parser} de SLY, pero la otra clase, es la clase encargada de definir las clases de cada nodo del AST. Hay muchas maneras de definir estos nodos, pero lo importante es que quede muy claro que nodos pueden estar asociados a su vez con otros nodos. Por ejemplo el nodo "ConstDeclaration" tiene como atributos un nombre de tipo "string" y un valor de tipo "Expression", o el nodo "BinOp" (Binary Operation) que tiene como atributos el tipo de operación, el operando izquierdo y el operando derecho.\\\\ 
+Todo esto se entiende mucho mejor con un ejemplo de un AST de un programa en GoneFSR. Es un ejemplo muy sencillo, pero la idea creo que puede quedar clara con esto. Este sería el código fuente.
+\begin{center}
+\begin{tabular}{c}
+\begin{lstlisting}
+func main () int {
+    var b int = 1;
+    if 1 < 3 {
+        b = 7;
+        print b;
+    }
+    return 0;
+}
+\end{lstlisting}
+\end{tabular}
+\end{center}
+
+\newpage Y este el AST asociado generado por el compilador en base a ese código.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth,keepaspectratio]{img/asttree_latexexample.png} 
+    \parbox{\linewidth}{\centering Ejemplo AST}
+    \label{fig:mi_imagen}
+\end{figure}
+
 \newpage
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Function{KMP}{t, p}\Comment{t = texto, p = patrón}
-\State $n \gets len(t)$
-\State $m \gets len(p)$
-\State \texttt{// Preprocesado, calculo de lpb}
-\State $lpb \gets (0)_m$
-\For{\(i \gets 1,...,m-1\)}
-\State $j \gets lpb_{i-1}$
-\While{\(j > 0 \And p_j \neq p_i\)}
-\State $j \gets lpb_{j-1}$
-\If{\(p_j == p_i\)}
-\State $lpb_i \gets j+1$
-\Else
-\State $lpb_i \gets j$
-\EndIf
-\EndWhile
-\EndFor
-\State \texttt{// Busqueda de p en t}
-\State $isFound \gets false$
-\State $j \gets 0$
-\For{\(i \gets 1,...,n-1\)}
-\While{\(j > 0 \And t_i \neq p_j\)}
-\State $j \gets lpb_{j-1}$
-\EndWhile
-\If{\(t_i == p_j\)}
-\State $j \gets j + 1$
-\EndIf
-\If{\(j == m\)}
-\State $isFound \gets true$
-\State break
-\State // Si no se para despues de la primera coincidencia completa
-\State // $j \gets lpb_{j-1}$
-\EndIf
-\EndFor
-\State \texttt{return} $isFound$
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-\noindent Insertar tabla de complejidades temporales\\ 
-
-\noindent (Falta conector) Nosotros aplicaremos este algoritmo para encontrar el \textit{eigenvalue} de la siguiente manera en la funcion \textit{Eigenvalue} del pseudocódigo. Guardaremos en una variable $p$ (patrón), la cadena \texttt{reverse($y_0^{i-1}$)}, y en otra variable $t$ (texto), la cadena $p_1^{i-1}$. Y teniendo una función \textit{knuthmp} implementada con \textit{Knuth Morris Pratt}, que podéis consultar en [LINK AL CODIGO], que lo que hace es devolver el numero de posiciones que se encuentran del patrón en el texto. Devolveremos
-\[Eigenvalue(y^i) = i - knuthmp(t, s)\]
-Esta diferencia puede dar como resultado un numero en el intervalo $[1, i]$ en función del numero de coincidencias del patrón.
-
-
-\section*{Formato de archivo nlfsr}
-El formato de archivo nlfsr (Non Linear Feedback Shift Register) es un formato el cual codifica la secuencia inicial y el polinomio FSR. Teniendo como objetivo hacer que este tipo de archivo ocupe el menor espacio posible, para ello he propuesto que la estructura del formato fuera la siguiente.
-\\
-\begin{figure}[H] % El [H] asegura que la imagen esté exactamente en ese lugar en el documento.
-    \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{nlfsrformat_01.png} % La imagen se ajustará al ancho del texto, manteniendo la proporción.
-    \parbox{\linewidth}{\centering Formato .nlfsr}
-    \label{fig:mi_imagen} % Etiqueta para referenciar la imagen en el documento.
-\end{figure}
-
-\noindent El primer segmento del archivo es la longitud de la cadena original ($y^n$), contenido en 16 bits. Estos 16 bits limitan el tamaño de la secuencia a comprimir en este formato, a una secuencia de longitud máxima 65536. Este límite es arbitrario, pero una vez se haya leído toda la explicación del formato entenderéis que no es difícil adaptarlo para cadenas más largas.  El segundo segmento es la complejidad no lineal $m$ de $y^n$ contenida también en 16 bits (o 2 Bytes). El tercer segmento es la secuencia inicial que mide $m$ bits. Y el cuarto segmento es una lista de \textit{minterms}, aquí tenéis una representación de como se representa un \textit{minterm}.
-\\
-\begin{figure}[H] % El [H] asegura que la imagen esté exactamente en ese lugar en el documento.
-    \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{nlfsrformat_02.png} % La imagen se ajustará al ancho del texto, manteniendo la proporción.
-    \parbox{\linewidth}{\centering Lista de minterms en formato .nlfsr}
-    \label{fig:mi_imagen} % Etiqueta para referenciar la imagen en el documento.
-\end{figure}
-\noindent Cada \textit{minterm} consta de un primer segmento en el que se indica el numero de variables de ese producto de literales lógicos, o dicho de otra manera la longitud. Cada bit del \textit{minterm} representara el estado de ese literal en el producto, si su valor es 1 eso significa que el literal se encuentra negado, por otro lado, si es 0, significará que es positivo. De esta manera, conseguimos almacenar toda la información consumiendo el mínimo numero de bytes posibles. Que sea la longitud del propio \textit{minterm} el delimitador entre \textit{minterms}, nos permite saber hasta donde tenemos que leer cuando haya que decodificar el archivo .nlfsr. Es importante aclarar, que no se pueden utilizar delimitadores fijos en este caso, como sí que podría hacerse en algunos unidades de comunicación por red, ya que toda secuencia podría estar dentro del minterm, y eso haría que se mezclasen los datos con las delimitaciones, lo cual provocaría errores en el momento de la lectura.
+El AST es importante porque en los siguientes pasos lo que haremos será recorrer recursivamente este árbol para analizar errores y finalmente, generar el código intermedio.
+\section{Análisis de errores}
+Analizar errores es un proceso complicado de programar, hay muchas cosas que pueden fallar en tiempo de ejecución y un buen compilador debe dar feedback al programador de las cosas que debe corregir para que su programa, al menos compile. Porque eso es en esencia, a lo que se dedica esta sección, a asegurarse de que todo el código fuente tiene sentido semántico, y si no lo tiene, corta el flujo del programa y no lo deja pasar a la generación de código intermedio.  \\\\
+En esta fase, el compilador GoneFSR, se asegura de que todos los identificadores estén definidos antes de que se les haga referencia. Avisa de todos aquellos errores de tipado como por ejemplo asignar un valor de tipo char a una variable de tipo int. Se asegura de que las comparaciones se hacen entre valores o variables del mismo tipo de dato. Notifica si se intenta cambiar el valor de una variable cuando se trata de una constante. Revisa que no llames a una variable con el nombre de un tipo de dato, ya que estas son palabras reservadas. Todo esto, entre muchos más "\textit{checks}" que se pueden consultar en el código [LINK AL CÓDIGO].
 \\\\
-He hecho unas gráficas para que se pueda ver la diferencia entre guardar un nlfsr de una secuencia con la misma estructura del formato .nlfsr pero usando caracteres ASCII, y utilizar el formato .nlfsr. Aquí tenéis las gráficas sin que se haya utilizado ningún algoritmo de compresión después. 
-\begin{figure}[H] % El [H] asegura que la imagen esté exactamente en ese lugar en el documento.
-    \centering
-    \includegraphics[width=0.8\textwidth,keepaspectratio]{format_comparison_graph.jpeg}
-    \parbox{\linewidth}{\centering Comparación tamaños formatos}
-    \label{fig:mi_imagen} 
-\end{figure}
-%Encriptación distribuida,
-\section*{Potenciales aplicaciones del formato nlfsr}
-Encriptación minimizada distribuida,
-\section*{Minimización de ESOP}
-La minimización de expresiones de operaciones AND-OR cuenta con muchos algoritmos que hacen un buen trabajo, sin embargo la minimización de ESOP resulta ser mucho más compleja o al menos, no se han desarrollado algoritmos del mismo calibre. Pero primero, definamos que es todo esto.\\\\
-A la forma de la función FSR, se la conoce como ESOP (\textit{Exclusive Sum Of Products}). Una formula lógica con esta forma, tan solo puede tener dos operaciones: XOR (suma) y AND (multiplicación). Minimizar una fórmula ESOP, significa encontrar una formula de menor tamaño que tenga la misma tabla de verdad, o el mismo mapa de Karnaugh; en definitiva, que sean equivalentes. La minimización de expresiones de operaciones AND-OR cuenta con muchos algoritmos que hacen un buen trabajo, sin embargo la minimización de ESOP resulta ser mucho más compleja o al menos, no tan  Aquí tenéis un ejemplo de un ESOP y su minimización, aunque más tarde veremos la teoría que hay detrás.
-\\\\
-\noindent
-\begin{minipage}{0.5\textwidth}
-    \centering
-    \begin{karnaugh-map}[4][2][1][$X_1X_0$][$X_2$]
-        \minterms{1, 5, 6, 7}
-        \maxterms{0, 2, 3, 4}
-    \end{karnaugh-map}
-\end{minipage}
-\begin{minipage}{0.5\textwidth}
-    \[
-    f(X_0, X_1, X_2) = X_0X_1 \oplus X_1X_2 \oplus X_2
-    \]
-\end{minipage}%
-\\
-Ahora trataremos de encontrar una equivalencia entre $X_1X_2 \oplus X_2$ y un cubo formado por estos literales. Encontramos que
-\\\\
-\noindent
-\begin{minipage}{0.5\textwidth}
-    \centering
-    \begin{karnaugh-map}[2][2][1][$X_1$][$X_2$]
-        \minterms{1}
-        \maxterms{0,2, 3}
-    \end{karnaugh-map}
-\end{minipage}
-\begin{minipage}{0.5\textwidth}
+En cuanto a como se recorre el árbol, es sencillo, por cada nodo se define un método y si un nodo tiene hijos llamas al método de los hijos hasta asegurarte de que el árbol no contiene errores.\\\\
+Lo último que me gustaría destacar sobre este apartado es el sistema para controlar que todos los flujos de una función retornen, y en caso de que alguno de ellos no retorne lanzar un error / excepción. En una función se pueden dar dos casos, el primer caso es que la función cuente con un \textit{return} incondicional al final de la misma, por lo que el fallo estaría solventado. Y el segundo caso, en el que la función no cuenta con un return al final de la misma, por lo que hay que verificar que cada uno de los flujos de la función terminan con el \textit{return} correspondiente. ¿Cómo podemos asegurarnos de que todos los flujos terminan? En GoneFSR, el problema esta solucionado de la siguiente manera.Primero recorres uno a uno los statements del \textit{body} de la función y en caso de que haya un return, lo guardas como verdadero en una variable booleana; en caso de que no haya un return en el "main flow" de la función, ocurrirá lo siguiente, durante el recorrido de cada statement de la función cada vez que se ha pasado por una bifurcación del flujo ya sea un if, un if else o un while, se ha añadido un true o un false en una lista global. Al terminar de recorrer la función, te aseguras de que todos los booleanos de esa lista sean verdaderos, en caso contrario si ademas no se ha encontrado un "return" en el "main flow" salta el error. Último apunte, cada vez que se visita el nodo de una función evidentemente se vacía la lista global de booleanos.
+\section{Generación de código intermedio}
+En Python con el módulo \textit{dis} puedes conseguir el código intermedio de cualquier bloque de código. Estudiando este código puedes conseguir un entendimiento de como funciona realmente Python, entendiendo cosas como que Python debe evaluar un símbolo cada vez que se hace uso de este. La diferencia entre entender esos de detalles y no entenderlos, es la diferencia entre un buen programador y un mal programador, ya que estas cosas suelen tener un impacto significativo en el rendimiento de un programa. \\\\
+\noindent En este paso se suelen hacer cambios para que el código funcione en cualquier máquina. Un buen ejemplo es que a pesar de que en GoneFSR existen los booleanos, en este paso los booleanos se convierten en enteros ya que hay máquinas que pueden no contar con este tipo de dato. \\\\
+En GoneFSR, nuestro código intermedio se parecerá al código intermedio de Python tan solo en forma, ya que nosotros trabajaremos con menos instrucciones y no haremos tantas optimización en tiempo de compilación. Además de que las instrucciones intermedias de Python (también se les llama bytecode) se interpretan directamente por la PVM (Python Virtual Machine), ya que en Python no se hace uso de llvm por cuestiones técnicas. \\\\
 
-     \begin{align*}
-          f'(X_1, X_2) =  X_1X_2 \oplus X_2 \\
-     z(X_1, X_2) =  X'_1X_2 \\
-     f' = z
-     \end{align*}
-\end{minipage}%
-%\newpage
-Y sabiendo esto, sustituimos en la formula original y nos queda un ESOP minimizado
-\[f_{min} = X_0X_1 \oplus X'_1X_2\]
-\\
-La \textit{Suma Exclusiva de Productos} se ha estudiado desde 1925 [Paper original], el artículo más citado que he encontrado respecto a este tema es []. En este describen un algoritmo en el que mediante transformaciones de cubos, expresiones pseudokronecker, reescritura de términos [], y estructuras de datos como BDD (Binary Decision Diagram). Nuestra aproximación al problema en este proyecto será mucho más sencilla pero haber leído todos estos artículos sobre el tema, me ha hecho entender más en profundidad lo complejo que es.
-\\\\
-A pesar de no hacer una implementación como la de [Heuristic Minimiza], en esta sección tomaremos prestada la teoría que elabora el artículo sobre los cubos que forman los ESOP. Definiremos como "cubo" a cada producto del ESOP. Definiremos como distancia entre cubos, el numero de variables que aparecen de distinta "forma" respecto al otro cubo. Una variable puede aparecer en un cubo de tres maneras: en positivo, negada, o no aparecer. Por ejemplo, un cubo $ab$ tiene distancia 1 respecto a un cubo $ab'$. Lo último, que creo que se debe tener en cuenta del articulo para la posible mejora de nuestro algoritmo, son dos proposiciones 
-\begin{tcolorbox}
-\textbf{Proposición 1:}\\
-Si añades el mismo cubo dos veces a cualquier ESOP, la función no cambiará. \\
-\textbf{Proposición 2:}\\
-La suma de dos cubos con distancia 1 se puede representar en un solo cubo. 
-\end{tcolorbox}
-%\noindent En el ejemplo anterior aplicamos la segunda proposición para minimizar la función.
+Para definir el código intermedio de nuestro compilador, un estilo de código intermedio llamado \textit{Single Static Assignment} (SSA). Este paradigma se define por usar cada variable una sola vez. En la práctica el generador de código intermedio trabaja con los siguientes posibles argumentos: registros como operandos (``R`` + número, p.ej, ``R2``), caracteres (p. ej. para distinguir entre el tipo de comparación), y por último números enteros o flotantes. Ahora veamos la estructura de nuestras instrucciones de código intermedio.
+\[ 
+\texttt{ mnemónico argumento1, argumento2, \dots, argumentoN } 
+\]
+Existen instrucciones de manejo de memoria para cargar variables (LOAD) o almacenar valores en variables (\textsc{STORE}), a su vez existe una distinción entre este tipo de instrucciones para variables locales y globales. También están contenidas en el código intermedio las instrucciones aritméticas y de comparación para tanto enteros como decimales. Por último, hay que mencionar a las instrucciones para crear bloques o bifurcaciones en el código. En el caso de funciones ``built-int`` (``print`` y ``intToFSR`` cuentan con su propio mnemónico como se puede ver en el código [link a el codigo]).\\\\
+Este módulo creará un diccionario con una lista de instrucciones de código intermedio para cada función. Ese diccionario se le pasará al generador de código llvm que será el encargado de dar el último paso para generar el ejecutable. 
+\section{Generación de código LLVM}
+
+\section{Compilación}
+\section{Implementación función fsr}
 
 
-
-
-
-\subsection*{Enumeración explicita para encontrar el ESOP de N variables de menor longitud}
-¿Y si en lugar de encontrar el mínimo para una fórmula en concreto, encontramos el mínimo de símbolos que debe de tener una fórmula para todos los resultados posibles dada una formula (o ESOP) de n variables de entrada? Pues bien, esto es justo lo que hace nuestro pequeño algoritmo. En lo que sigue veremos paso a paso en que consiste. El primer paso que debemos entender es como conseguimos representar todas las formulas posibles de n variables con m simbolos, pudiendo ser cada símbolo, o bien, un XOR, o bien, un AND. La estructura que utilizamos para lograrlo es muy sencilla, es una lista de enteros. Pero tiene un truco, y es que el 0 representa el XOR o la suma, el 1 representa la operación AND o la multiplicación, y el 2 representa la negación. Cualquier entero $i > 2$ representa una variable de entrada $X_{i - 3}$. Con este sistema de representación en el que cualquier fórmula puede ser representada por una lista o cadena de enteros en la que cada posición tiene un entero $i$, $0 <= i < n+3$ de longitud, $m+(m+1)$, siendo $n$ el numero de variables de la fórmula y $m$, el numero de símbolos(XOR, AND) que puede tener la fórmula. \\\\
-Para entender mejor el sistema, pondré los siguientes ejemplos. Teniendo una formula $X_0 * X_2 * X_3 + X_0$ y otra formula $X'_0 + X_1 * X_3 + X_4$, estas son sus representaciones con este sistema.
-\begin{align*}
-X_0 * X_2 * X_3 + X_0 = [0, 1, 3, 1, 5, 6, 3] \\
-X'_0 + X_1 * X_3 + X_4 = [1, 0, 2, 3, 4, 0, 6, 7]
-\end{align*}
-El cálculo del numero de posibles resultados para una formula de n variables de entrada es
-\[k = 2^{2^{n}}\]
-Ahora debemos encontrar para cada posible resultado del conjunto de posibles resultados de tamaño k, una formula que satisfaga ese resultado. Para ello lo que haremos, será generar todas las combinaciones con repetición del conjunto $\{0,1, ..., n + 3 - 1\}$ de longitud $p$, definimos al conjunto de todas las combinaciones como $g^{(n+3-1)^p}$, cada elemento de $g$ será una posible combinación de tamaño $p$. Es importante decir que, $p$ determinará el numero de posibles símbolos que pueden haber en la fórmula. Es cierto que habrá algunas combinaciones que no tendrán sentido gramático en esta gramática que hemos creado. Por ejemplo $[2, 2, 2, 2, 2, 2, 2]$, no representa ninguna fórmula. Para distinguir entre las listas que tienen sentido de las que no, hemos escrito una función recursiva que crea una cadena de texto o \textit{string} en base a la lista. Aquí tenéis el pseudocódigo, también podéis leer el código real escrito en Python en [Link Al Código].
-\newpage
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Function{stringFormula}{f}\Comment{f = lista de enteros}
-\If{\texttt{isNotEmpty(f)}}
-\State $val \gets \texttt{f.pop()}$\Comment{pops last int from f}
-\If{\(val == 0\)}
-\State \texttt{return stringFormula(f) + "+" + stringFormula(f)}
-\EndIf
-\If{\(val == 1\)}
-\State \texttt{return stringFormula(f) + "*" + stringFormula(f)}
-\EndIf
-\If{\(val == 2\)}
-\State \texttt{return "not " + stringFormula(f)}
-\EndIf
-\State \texttt{return "x" + (val - 3)}
-\EndIf
-\State \texttt{return "S"}
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-\noindent El siguiente paso, es escribir la función para calcular cuantos posibles resultados se generan para un numero de variables dado y una longitud de la cadena de lista de enteros dada. Que lo único que hace es para cada cadena de enteros válida (validada con la función del pseudocódigo escrita encima de este párrafo). Prueba todas las posibles combinaciones de las variables de entrada de la función, es decir si por ejemplo, es una función de 3 variables de entrada probara las $2^3$ combinaciones. Y después de recopilar todos los resultados, hará una lista con ellos. Y la intentará sumar a un set. Una vez se han agotado todas las combinaciones de listas de enteros ("formulas lógicas"), se comparará la longitud del set con el número de posibles resultados $k$; si estos coinciden es que hemos encontrado el tamaño mínimo de la lista de enteros para generar todas las formulas necesarias que coinciden con todos los resultados posibles. 
-\newpage
-\noindent Aquí tenéis dos gráficas creadas con la librería \textit{matplotlib}, en el eje $X$ la primera fila es el tiempo que ha tardado en ejecutar el algoritmo, y la segunda fila es el tamaño de la lista de enteros. El eje $Y$ representa el numero de posibles resultados retornados por el algoritmo.
-
-\begin{figure}[h!]
-    \centering
-    \begin{minipage}{0.5\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{2_variables.png}
-        \parbox{\linewidth}{\centering ESOP de 2 variables de entrada}
-    \end{minipage}%
-    \begin{minipage}{0.5\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{3_variables.png}
-        \parbox{\linewidth}{\centering ESOP de 3 variables de entrada}
-    \end{minipage}
-    \vspace{1em} % Espacio entre las filas de imágenes
-
-    \begin{minipage}{0.5\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{4_variables.png}
-        \parbox{\linewidth}{\centering ESOP de 4 variables de entrada}
-    \end{minipage}
-\end{figure}
-
-\noindent Como vemos en las gráficas, el algoritmo converge en ambos casos es decir, encuentra todas las listas de enteros que satisfacen los $k$ posibles resultados para ESOP de $n$ variables. Sin embargo, a partir de ESOPs de 4 variables debido a la complejidad temporal del algoritmo, se tarda mucho en que el algoritmo converja y empeora conforme el número de variables aumenta, ya que la complejidad temporal de nuestro algoritmo es de $O((n+3)^p * 2^n)$. Con mi procesador, en 10 minutos consigue calcular la función hasta $p = 9$.
-\\\\
-Para calcular las combinaciones en el código original, hemos usado la librería \textit{itertools}, y en concreto la función \textit{product}, ya que fue una recomendación de mi tutor, Domingo. Este modulo de Python genera sus funciones, utilizando Cython para después crear módulos utilizables desde Python, pero escritos en C. Sentí cierta curiosidad, por como sería hacer un programa en C que calcule todas las combinaciones tal y como lo hace \textit{itertools}. Así que me puse manos a la obra, y escribí dos versiones una secuencial [codigo secuencial] y otra paralelizada con \textit{OpenMP} [codigo paralelizado]. Si habéis leído el código sabréis que lo hago todo sobre un solo array, lo escribí así por temas de la localidad de los valores guardados. En mi \textit{hardware}, el código secuencial resultó ser un poco más lento que el de \textit{itertools}, sin embargo, para mi sorpresa el código paralelizado sí me dio mejores resultados, incluso superando a la función del módulo de Python. Si bien, es cierto que Python está "capado" por el GIL (Global Interpreter Locker), ya que a pesar de contar con módulos que ofrecen funciones de "multithreading" no se consigue en ningún momento una paralelización real, considero que los datos siguen siendo interesantes, aquí tenéis una gráfica.
-
-\begin{figure}[H] % El [H] asegura que la imagen esté exactamente en ese lugar en el documento.
-    \centering
-    \includegraphics[width=0.9\textwidth,keepaspectratio]{programs_comparison_graph.jpeg}
-    \parbox{\linewidth}{\centering Comparación tamaños formatos}
-    \label{fig:mi_imagen} 
-\end{figure}
-\noindent El eje Y es el tiempo de ejecución en segundos, y el eje X tiene 2 listas de valores, la lista más cercana al eje es el cardinal del conjunto sobre el que se calculan todas las posibles combinaciones. y el tamaño de la lista es el número de debajo. Cabe destacar que para un conjunto de 10 elementos y un tamaño de lista 8, mi sistema operativo (Debian \textit{bookworm}) mataba el proceso de Python. Sin embargo, para los mismos parámetros mis programas escritos en C, tanto el secuencial como el paralelo, registraron 16.8 y 5.8 segundos respectivamente. Evidentemente con parámetros más altos tenía problemas de memoria debido a mi \textit{hardware} limitado.
