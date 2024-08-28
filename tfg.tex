@@ -1,9 +1,17 @@
 \documentclass{tfg_domingo}
 % \documentclass[numeros]{tfg_domingo}
+\usepackage{graphicx} % Required for inserting images
+%\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{bm}
-\usepackage{bbm}
+\usepackage{stackengine}
+\usepackage{comment}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{scalerel}
+\usepackage{xcolor}
+\usepackage{karnaugh-map}
 
 \autor{Pedro Castro Cutillas}
 \titulo{Construcción de un compilador para el lenguaje BeGone}
@@ -43,7 +51,7 @@
 % aceptables (si los hay), p. ej,
 % \hyphenation{ba-rro-co, frío, cria-do, su-per-ra-tón}
 \hyphenation{Dijkstra new-speak}
-
+\SetKwComment{Comment}{/* }{ */}
 \portada
 \frontmatter
 % \sucinto{A Sofía}
@@ -53,7 +61,7 @@
 
 \mainmatter
 \chapter{Introduction}\label{cap:Intro}
-\input{cap1.tex}
+%\input{cap1.tex}
 
 
 \chapter{Underlying theory of our method}\label{cap:Teoria}
@@ -62,12 +70,12 @@
 
 
 \chapter{Experimental results}\label{cap:Resultados}
-\input{cap3.tex}
+%\input{cap3.tex}
 
 
 
 \chapter{Conclusions and open problems}\label{cap:Conclusiones}
-\input{cap4.tex}
+%\input{cap4.tex}
 
 
 
