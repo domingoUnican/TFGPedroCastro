@@ -13,6 +13,37 @@
 \usepackage{xcolor}
 \usepackage{karnaugh-map}
 \usepackage{hyperref}
+\definecolor{fuchsia}{RGB}{255, 0, 255}
+\lstdefinestyle{goneStyle}{
+  language=Java, % Set the language to Python for syntax highlighting
+  basicstyle=\ttfamily\small, % Set the font family and size
+  keywordstyle=\color{fuchsia}, % Set the color for keywords
+  commentstyle=\color{green!60!black}, % Set the color for comments
+  stringstyle=\color{red}, % Set the color for strings
+  showstringspaces=false, % Don't show spaces in strings as underscores
+  numbers=left, % Show line numbers on the left
+  numberstyle=\footnotesize\ttfamily\color{gray}, % Set the style for line numbers
+  frame=single, % Add a frame around the code
+  rulecolor=\color{lightgray}, % Set the color for the frame
+  breaklines=true, % Enable line breaks
+  breakatwhitespace=true, % Break lines at whitespace
+  tabsize=4 % Set the tab size
+}
+\lstdefinestyle{pythonStyle}{
+  language=Python, % Set the language to Python for syntax highlighting
+  basicstyle=\ttfamily\small, % Set the font family and size
+  keywordstyle=\color{fuchsia}, % Set the color for keywords
+  commentstyle=\color{green!60!black}, % Set the color for comments
+  stringstyle=\color{red}, % Set the color for strings
+  showstringspaces=false, % Don't show spaces in strings as underscores
+  numbers=left, % Show line numbers on the left
+  numberstyle=\footnotesize\ttfamily\color{gray}, % Set the style for line numbers
+  frame=single, % Add a frame around the code
+  rulecolor=\color{lightgray}, % Set the color for the frame
+  breaklines=true, % Enable line breaks
+  breakatwhitespace=true, % Break lines at whitespace
+  tabsize=4 % Set the tab size
+}
 
 \autor{Pedro Castro Cutillas}
 \titulo{Construcción de un compilador para el lenguaje BeGone}
