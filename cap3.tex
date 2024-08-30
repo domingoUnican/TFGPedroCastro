@@ -41,7 +41,7 @@ Cabe destacar, lo increíblemente simple que es, para lo complejos que pueden ll
 
 \subsection{Fibonacci y Galois}
 Hay dos tipos principales de registros de desplazamiento lineal. El que hemos explicado hasta ahora se le denomina LFSR de Fibonacci, aunque este no fuera el autor se le llama así por su relación con las recurrencias. Este tipo de LFSR puede ser de período máximo, es decir si está constituido por un polinomio primitivo, o puede describirlo otro polinomio que no sea primitivo, y entonces tener un período menos a $2^n - 1$. \\\\
-El otro tipo es más díficil de explicar y cómo en las siguientes secciones no tiene especial impacto, tan sólo lo mencionaré, se trata del LFSR de Galois (sí, el del duelo y las cartas), en este registro de desplazamiento lineal algunos de los bits se desplazan y otros son el resultado de operaciones entre las posiciones del propio registro.
+El otro tipo es más difícil de explicar y cómo en las siguientes secciones no tiene especial impacto, tan sólo lo mencionaré, se trata del LFSR de Galois (sí, el del duelo y las cartas), en este registro de desplazamiento lineal algunos de los bits se desplazan y otros son el resultado de operaciones entre algunas de las posiciones del propio registro.
 \\
 
 
@@ -51,23 +51,42 @@ El otro tipo es más díficil de explicar y cómo en las siguientes secciones no
 Antes de pasar al algoritmo sobre el que se central de traducción de una secuencia binaria a su FSR mínimo. Debemos explicar el procedimiento que toma como referencia, este es el algoritmo de \textit{Berlekamp Massey}. El algoritmo original, Berlekamp, del que deriva Berlekamp Massey, fue creado para decodificar códigos BCH (Bose-Chaudhuri-Hocquenghem), estos códigos se utilizan para codificar información de manera redundante por si hubiera algún fallo en la transmisión o en el almacenado de los datos poder corregirlos a través de Forward Error Correction (FEC). \\\\
 El algoritmo de Berlekamp-Massey, también llamado por su creador James Massey, \textit{LFSR Synthesis Algorithm (Berlekamp iterative algorithm)} en el articulo original \cite{massey1969shift}, es capaz de encontrar la recurrencia lineal más corta para cualquier secuencia numérica finita. Esto tiene mucho que ver con la modificación de este algoritmo que utilizaremos en la siguiente sección para calcular la complejidad no lineal de un secuencia binaria. Además también es el culpable de que el cifrado a través de LFSR sea inseguro, ya que si conoces una parte del texto claro de tamaño suficiente puedes recuperar el \textit{keystream} con el que se cifro.\\\\
 Primero explicaré en que consiste el algoritmo para encontrar la recurrencia lineal mas corta para cualquier secuencia de números en base decimal. Dada una secuencia $s = \{s_0, s_1, \dots\}$ diremos que existe una secuencia de recurrencia lineal $c = \{c1, c2, \dots, c_n\}$, las cuales cumplen.
-\[s_i = \Sigma_{j=1}^n c_js_{i-j} \quad \texttt{para $i \geq n$}\]
+\[s_i = \Sigma_{j=1}^n c_js_{i-j} \quad \text{para $i \geq n$}\]
 Para $i \geq n$ tan solo quiere decir que es para todos los números fuera de los casos base ya que los casos base de la recurrencia lineal serán desde $s_0$ hasta $s_n$. Un ejemplo de recurrencia lineal muy típico es la sucesión de Fibonacci o su primo hermana la sucesión de Lucas. \\\\
-Berlekamp Massey se basa en lo siguiente. Teniendo una secuencia $s$ cualquiera y un conjunto de coeficientes vacío, ir rellenando el conjunto de coeficientes según se recorre la secuencia $s$ y en caso de que ocurra un fallo, aplicar una función correctora $d$. También hay que guardar copias de c y tener un índice de un fallo pasado, en el ejemplo veremos para que y por qué.\\\\ 
-Veamos esto con un ejemplo sencillo, dada la secuencia $s = \{ 1, 3, 9, 15, 9, -81 \}$ y el conjunto $c = \{ \ \}$, asumiremos que si c está vacío, c será igual a 0. Definiremos como $pc$ (\textit{past c}) al conjunto que nos servirá como copia de c, el cual comienza vacío como $c$. Y la variable donde guardaremos el índice al fallo pasado como $f$.
+Berlekamp Massey se basa en lo siguiente. Teniendo una secuencia $s$ cualquiera y una lista con los coeficientes de la recurrencia lineal vacío, ir rellenando la lista de coeficientes según se recorre la secuencia $s$ y en caso de que ocurra un fallo, aplicar una función correctora $d$. También hay que guardar copias de c y tener un índice de un fallo pasado, en el ejemplo veremos para que y por qué.\\\\ 
+Veamos esto con un ejemplo sencillo, dada la secuencia $s = \{ 1, 3, 9, 15, 9, -81 \}$ y la la lista $c = \{ \ \}$, asumiremos que si c está vacío, c será igual a 0. Definiremos como $pc$ (\textit{past c}) al conjunto que nos servirá como copia de c, el cual comienza vacío como $c$. Y la variable donde guardaremos el índice al fallo pasado como $f$.
 \\\\
 En la primera iteración: \\
 \(i=0 \quad s_0 = 1 \\
 c(0) = 0 \neq s_0\\
+f = i = 0
 \)\\
-Como da igual a que valor pongamos coeficiente añadamos a $c$ ya que $s_0$ ahora será caso base, en mi caso añado a $c$ tantos ceros como iteraciones hayan pasado hasta el primer fallo en este caso la primera así que $c = \{ 0 \}$.
+Como da igual a que valor pongamos coeficiente añadamos a $c$ ya que $s_0$ ahora será caso base, en mi implementación añado a $c$ tantos ceros como iteraciones hayan pasado hasta el primer fallo en este caso la primera así que $c = \{ 0 \}$.
 \\\\
 En la segunda iteración: \\
-\(i=0 \quad s_1 = 3 \\
+\(i=1 \quad s_1 = 3 \\
 c(1) = c_1 * s_{1-1} = 0 \neq s_1\\
 \)\\
-Al ser el segundo fallo, ya hay que aplicar la función correctora $d$, el cálculo de esta siempre es igual. Primero hacer que $d$ sea igual a $-1 * pc$
-Aquí está el pseudocódigo, podeis encontrar una implementación en Python escrita por mí en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/code_proofs/simple_berlekamp_massey.py}{simplebm.py} basado en uno de los códigos de \href{https://mzhang2021.github.io/cp-blog/berlekamp-massey/}{artículo berlekamp massey}.
+Al ser el segundo fallo, ya hay que aplicar la función correctora $d$, el cálculo de esta siempre es igual. Primero hacer que $d$ sea igual a $-1 * pc$, insertar un uno en la posición 0 de $d$, multiplicar la secuencia por $\frac{\Delta}{d(f+1)}$, siendo $\Delta$ igual  a $s_i - c(i)$, finalmente debes insertar $i-f-1$ ceros a la izquierda de la lista $c$. En esta iteración $d$ sería igual a. \\\\
+\(d = \{ 1 \} \\
+ d = \{ 1 \} *  \frac{\Delta}{d(f+1)} \quad \text{siendo} \quad d(i) = \Sigma_{j=1}^n d_js_{i-j} \\
+ d(0+1) = 1 \quad \Delta = 3 \quad \frac{\Delta}{d(f+1)} = 3 \\
+ d = \{ 1 \} *  \frac{\Delta}{d(f+1)} = 3 \\
+ \text{Finalmente, }
+ d = \{ 3 \}  \quad \text{ya que, }  \quad i -f -1 = 0
+\)\\
+Ahora sumamos esta función correctora $d$ a $c$ para obtener nuestra $c$, $c = c + d = \{3\}$. Hay que decir que ni $pc$ ni $f$ han cambiado su valor en esta iteración. Pasaremos directamente a explicar la cuarta iteración (ya que en la tercera no hay fallo) y no repetir los pasos, solamente explicaré el por qué en este fallo sí se actualizan $pc$ y $f$. 
+\\\\
+En la cuarta iteración: \\
+\(i=3 \quad s_3 = 15 \\
+c(3) = c_1 * s_{3-1} = 18 \neq s_3\\
+\)\\
+Tras ejecutar todos los pasos para el cálculo de $d$, queda $d = \{ 0, 0, -12\}$. Y ahora sí que actualizamos tanto $f$ como $pc$.\\\\
+\(f = i = 3 \\
+pc = c \quad \text{c es la versión de c de $i=2$, es decir, antes de sumar d}\\
+\)\\
+Esta actualización se debe a que esas variables deben cambiar cuando se cumple $i - len(c) > f - len(pc)$. Intuitivamente, diremos que $pc$ guardará el c con menos coeficientes respecto a donde fallo. \\\\%esto no se como explicarlo bien%
+Aquí está el pseudocódigo, podéis encontrar una implementación en Python escrita por mí en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/code_proofs/simple_berlekamp_massey.py}{simplebm.py} basado en uno de los códigos de \href{https://mzhang2021.github.io/cp-blog/berlekamp-massey/}{artículo berlekamp massey}.
 
 
 
@@ -76,32 +95,37 @@ Aquí está el pseudocódigo, podeis encontrar una implementación en Python esc
 \KwData{$s$ secuencia binaria}
 \KwResult{El LFSR mínimo}
 $c \gets [ \ ]$\;
-$oldc \gets [ \ ]$\;
+$pc \gets [ \ ]$\;
 $f \gets -1$\;
 \For{$i = 0; i < len(s); i++$}{
+    $delta \gets s[i] - \sum_{j=1}^{len(c)+1}c_{j-1}*s_{i-j}$\;
   \eIf{$f == -1$}{
      $c \gets resize(c, i+1)$\;
      $f \gets i$\Comment*[r]{Para la primera vez}
   }{
-  $d \gets - oldc$\;
+  $d \gets - pc$\;
   $d.insert(0,1)$\;
-  $df1 \gets \sum_{j=1}^{len(d) + 1}d_{j-1}*s[f+1-j]$\;
-  $coefficient = \frac{delta}{df1}$\;
-  $d \gets d*coefficient$\;
+  $df1 \gets \sum_{j=1}^{len(d)}d_{j-1}*s[f+1-j]$\;
+  $coeff = \frac{delta}{df1}$\;
+  $d \gets d*coeff$\;
   $d \gets \texttt{addzerostoleft(i-f-1, d)}$\Comment*[r]{suma i-f-1 ceros a la izq}
   $copyc \gets c$\;
   \If{\(len(c) > len(d)\)}
   {
    $c \gets \texttt{addzerostoright(len(d) - len(c), d)}$
   }
-  
+  $c \gets c + d$\;
+  \If{\(i - len(copyc) > f - len(pc)\)} {
+        $pc \gets temp$\;
+        $f \gets i$\;
+    }
   }
 }
 \end{algorithm}
 
 
 
-NOTA: Añadir nota breve de aplicaciones del algoritmo de berlekamp massey
+%NOTA: Se pueden Añadir nota breve de aplicaciones del algoritmo de berlekamp massey
 
 
 \begin{comment}
@@ -151,7 +175,7 @@ $h \gets y_0$\;
     $k \gets k - 1$\;
 }
 \end{algorithm}
-\newpage
+
 Empezaremos definiendo algunas de las variables y su significado. La variable $k$ está denominada salto y es la distancia entre $c(y^{n})$ y $c(y^{n-1})$. Uno de los teoremas del artículo prueba [X, pp 2] que (falta explicar un poco el por que de esta formula y su relación con $k(y^n)$)
 \[k = n - m - (t^{(n-1)}_0 + T^{(n - 1)})\]
 Este teorema se usará en el algoritmo para el cálculo del salto. Siendo $t_0^{(n - 1)}$, el preperiodo de la secuencia $y^{n-1}$ y $T^{(n - 1)}$ el periodo de $y^{n-1}$. Es importante aclarar, que $t_0$ y $T$ son el preperiodo y el periodo en el caso de que sean los números enteros más pequeños que cumplan.
