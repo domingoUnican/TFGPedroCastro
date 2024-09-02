@@ -1,8 +1,8 @@
 # gone/checker.py
 from .errors import error
 from .ast import *
-from .typesys import check_binop, check_unaryop
-from .typesys import IntType, FloatType, CharType, BoolType, Type
+from .typesys import IntType, FloatType, CharType, StringType, BoolType, Type, check_binop, check_unaryop
+
 class CheckProgramVisitor(NodeVisitor):
     def __init__(self):
         # Initialize the symbol table
@@ -13,7 +13,7 @@ class CheckProgramVisitor(NodeVisitor):
         self.functions = { } # functions table, should be initialized with built-in functions( o no, antes no tenia print, y entendia bien la funcion print, cambiar cuando toque)
         self.cur_function = None # current function
         self.global_code = True
-        self.symbols.update({'types': {'int': IntType, 'float': FloatType, 'char': CharType, 'bool': BoolType}})
+        self.symbols.update({'types': {'int': IntType, 'float': FloatType, 'char': CharType, 'string': StringType, 'bool': BoolType}})
         self.builtin_types = ['int', 'float', 'char']
 
     # Private Auxiliary Methods ...
@@ -111,6 +111,9 @@ class CheckProgramVisitor(NodeVisitor):
     
     def visit_BoolLiteral(self, node):
         node.type = BoolType
+    
+    def visit_StringLiteral(self, node):
+        node.type = StringType
 
     def visit_Assignment(self, node):
         node.location.usage = 'write'
@@ -166,7 +169,23 @@ class CheckProgramVisitor(NodeVisitor):
     
     def visit_PrintStatement(self, node):
         self.visit(node.value)
-
+    
+    def visit_CoderStatement(self, node):
+        self.visit(node.inputp)
+        self.visit(node.outputp)
+        if node.inputp.type != StringType:
+            error(node.lineno, f"Coder: input path is not an string")
+        if node.outputp.type != StringType:
+            error(node.lineno, f"Coder: output path is not an string")
+    
+    def visit_DecoderStatement(self, node):
+        self.visit(node.inputp)
+        self.visit(node.outputp)
+        if node.inputp.type != StringType:
+            error(node.lineno, f"Decoder: input path is not an string")
+        if node.outputp.type != StringType:
+            error(node.lineno, f"Decoder: output path is not an string")
+            
     def visit_IfStatement(self, node):
         self.visit(node.test)
         if node.test.type != BoolType:

@@ -108,7 +108,7 @@ class GoneParser(Parser):
         p.statements.append(p.statement)
         return p.statements
 
-    @_('print_statement', 'assign_statement', 'const_declaration', 'var_declaration', 
+    @_('coder_statement', 'decoder_statement','print_statement', 'assign_statement', 'const_declaration', 'var_declaration', 
        'if_statement', 'while_statement', 'function_definition', 'return_statement', 
        'function_calling')
     def statement(self, p):
@@ -118,6 +118,14 @@ class GoneParser(Parser):
     @_('PRINT expression SEMI') # print statement
     def print_statement(self, p):
         return PrintStatement(p.expression, lineno = p.lineno)
+    
+    @_('CODER expression COMMA expression SEMI')
+    def coder_statement(self, p):
+        return CoderStatement(p.expression0, p.expression1, lineno=p.lineno)
+    
+    @_('DECODER expression COMMA expression SEMI')
+    def decoder_statement(self, p):
+        return DecoderStatement(p.expression0, p.expression1, lineno=p.lineno)
     
     @_('ID ASSIGN expression SEMI') # assign statement
     def assign_statement(self, p):
@@ -258,6 +266,10 @@ class GoneParser(Parser):
     @_('BOOL')
     def literal(self, p):
         return BoolLiteral(p.BOOL == 'true', lineno = p.lineno)
+
+    @_('STRING')
+    def literal(self, p):
+        return StringLiteral(eval(p.STRING), lineno = p.lineno)
     
     @_('ID')
     def location(self, p):

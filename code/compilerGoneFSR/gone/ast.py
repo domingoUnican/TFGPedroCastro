@@ -109,6 +109,20 @@ class PrintStatement(Statement):
     '''
     value : Expression
 
+class CoderStatement(Statement):
+    '''
+    coder path0, path1 ;
+    '''
+    inputp : Expression
+    outputp: Expression
+
+class DecoderStatement(Statement):
+    '''
+    decoder path0, path1 ;
+    '''
+    inputp : Expression
+    outputp: Expression
+
 class Assignment(Statement):
     '''
     ID EQ expression ;
@@ -173,7 +187,10 @@ class CharLiteral(Literal):
 
 class BoolLiteral(Literal):
     value : bool
-    
+
+class StringLiteral(Literal):
+    value : str
+
 class BinOp(Expression):
     '''
     A Binary operator such as 2 + 3 or x * y
@@ -196,15 +213,9 @@ class ReadValue(Expression):
     location : Location
 
 
-    
-# ----------------------------------------------------------------------
-#                  DO NOT MODIFY ANYTHING BELOW HERE
-# ----------------------------------------------------------------------
-
 # The following classes for visiting and rewriting the AST are taken
 # from Python's ast module.   
 
-# DO NOT MODIFY
 class VisitDict(dict):
     def __setitem__(self, key, value):
         if key in self:

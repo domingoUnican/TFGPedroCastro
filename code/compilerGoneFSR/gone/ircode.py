@@ -26,7 +26,6 @@ Here is an instruction set specification for the IRCode:
     AND    r1, r2, target      :  target = r1 & r2
     OR     r1, r2, target      :  target = r1 | r2
     XOR    r1, r2, target      :  target = r1 ^ r2
-    ITOF   r1, target          ;  target = float(r1)
 
     MOVF   value, target       ;  Load a literal float
     VARF   name                ;  Declare a float variable 
@@ -39,7 +38,6 @@ Here is an instruction set specification for the IRCode:
     DIVF   r1, r2, target      ;  target = r1 / r2
     PRINTF source              ;  print source (debugging)
     CMPF   op, r1, r2, target  ;  r1 op r2 -> target
-    FTOI   r1, target          ;  target = int(r1)
 
     MOVB   value, target       ; Load a literal byte
     VARB   name                ; Declare a byte variable
@@ -47,7 +45,6 @@ Here is an instruction set specification for the IRCode:
     LOADB  name, target        ; Load a byte from a variable
     STOREB target, name        ; Store a byte into a variable
     PRINTB source              ; print source (debugging)
-    BTOI   r1, target          ; Convert a byte to an integer
     ITOB   r2, target          ; Truncate an integer to a byte
     CMPB   op, r1, r2, target  ; r1 op r2 -> target
 
@@ -59,6 +56,9 @@ control flow instructions
     CALL   name, arg0, arg1, ... argN, target    ; Call a function name(arg0, ... argn) -> target
     RET    r1                    ; Return a result from a function
 
+codification instructions
+    CODER source, output
+    DECODER source, output
 '''
 
 from . import ast
@@ -74,16 +74,18 @@ class GenerateCode(ast.NodeVisitor):
         self.local_variables = []
         # Binary operations codes
         self.binopcodes = {'int': {'+': 'ADDI', '-': 'SUBI', '*': 'MULI', '/': 'DIVI'}, 'float': {'+': 'ADDF', '-': 'SUBF', '*': 'MULF', '/': 'DIVF'}}
-        self.inst_declare_var_global = {'int': 'VARI', 'float': 'VARF', 'char': 'VARB', 'bool': 'VARI'} # for global variables
-        self.inst_declare_var_local = {'int': 'ALLOCI', 'float': 'ALLOCF', 'char': 'ALLOCB', 'bool': 'ALLOCI'} # for local variables
-        self.inst_str = {'int': 'STOREI', 'float': 'STOREF', 'char': 'STOREB', 'bool': 'STOREI'} # for global variables
-        self.inst_str_local = {'int': 'STOREFASTI', 'float': 'STOREFASTF', 'char': 'STOREFASTB', 'bool': 'STOREFASTI'} # for local variables
-        self.inst_load = {'int': 'LOADI', 'float': 'LOADF', 'char': 'LOADB', 'bool': 'LOADI'} # for global variables
-        self.inst_load_local= {'int': 'LOADFASTI', 'float': 'LOADFASTF', 'char': 'LOADFASTB', 'bool': 'LOADFASTI'} # for local variables
+        self.inst_declare_var_global = {'int': 'VARI', 'float': 'VARF', 'char': 'VARB', 'bool': 'VARI', 'string': 'VARS'} # for global variables
+        self.inst_declare_var_local = {'int': 'ALLOCI', 'float': 'ALLOCF', 'char': 'ALLOCB', 'bool': 'ALLOCI', 'string': 'ALLOCS'} # for local variables
+        self.inst_str = {'int': 'STOREI', 'float': 'STOREF', 'char': 'STOREB', 'bool': 'STOREI', 'string': 'STORES'} # for global variables
+        self.inst_str_local = {'int': 'STOREFASTI', 'float': 'STOREFASTF', 'char': 'STOREFASTB', 'bool': 'STOREFASTI', 'string': 'STOREFASTS'} # for local variables
+        self.inst_load = {'int': 'LOADI', 'float': 'LOADF', 'char': 'LOADB', 'bool': 'LOADI', 'string': 'LOADS'} # for global variables
+        self.inst_load_local= {'int': 'LOADFASTI', 'float': 'LOADFASTF', 'char': 'LOADFASTB', 'bool': 'LOADFASTI', 'string': 'LOADFASTS'} # for local variables
         self.inst_cmp = {'int': 'CMPI', 'float': 'CMPF', 'char': 'CMPB'}
         self.cmp_op = ['==', '!=', '<', '<=', '>', '>=']
         self.get_bool_binopcodes = lambda x, args_type : {'int': 'CMPI', 'float': 'CMPF', 'char': 'CMPB'}.get(args_type, None) if x in self.cmp_op  else {'&&': 'AND', '||': 'OR'}.get(x, None)
         self.logical_op = ['&&' '||']
+        # print types
+        self.print_types = {'int': 'PRINTI', 'bool': 'PRINTB', 'char': 'PRINTI', 'float': 'PRINTF', 'string': 'PRINTS'}
 
     def new_register(self):
          '''
@@ -99,8 +101,6 @@ class GenerateCode(ast.NodeVisitor):
     def visit_IntegerLiteral(self, node):
         target = self.new_register()
         self.program[self.cur_function]['code'].append(('MOVI', node.value, target))
-
-        # Save the name of the register where the value was placed
         node.register = target
 
     def visit_FloatLiteral(self, node):
@@ -118,6 +118,11 @@ class GenerateCode(ast.NodeVisitor):
         self.program[self.cur_function]['code'].append(('MOVI', int(node.value == True), target))
         node.register = target
 
+    def visit_StringLiteral(self, node):
+        target = self.new_register()
+        self.program[self.cur_function]['code'].append(('MOVS', node.value, target))
+        node.register = target
+    
     def visit_ConstDeclaration(self, node):
         value_type = node.value.type.name
         self.visit(node.value)
@@ -223,17 +228,22 @@ class GenerateCode(ast.NodeVisitor):
             
     def visit_PrintStatement(self, node):
         self.visit(node.value)
-        if node.value.type.name == 'int':
-            code = 'PRINTI'
-        if node.value.type.name == 'float':
-            code = 'PRINTF'
-        if node.value.type.name == 'char':
-            code = 'PRINTB'
-        if node.value.type.name == 'bool':
-            code = 'PRINTI'
+        code = self.print_types[node.value.type.name]
         inst = (code, node.value.register)
         self.program[self.cur_function]['code'].append(inst)
 
+    def visit_CoderStatement(self, node):
+        self.visit(node.inputp)
+        self.visit(node.outputp)
+        inst = ("CODER", node.inputp.register, node.outputp.register)
+        self.program[self.cur_function]['code'].append(inst)
+    
+    def visit_DecoderStatement(self, node):
+        self.visit(node.inputp)
+        self.visit(node.outputp)
+        inst = ("DECODER", node.inputp.register, node.outputp.register)
+        self.program[self.cur_function]['code'].append(inst)
+    
     def visit_IfStatement(self, node):
         self.visit(node.test)
         block_if = self.new_block()

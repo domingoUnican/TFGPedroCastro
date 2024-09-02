@@ -37,8 +37,12 @@ class CharType(Type):
     name = "char"
     pass
 
+class StringType(Type):
+    name = "string"
+    pass
+
 # List of builtin types.  These will get added to the symbol table
-builtin_types = [ IntType, FloatType, CharType, BoolType]
+builtin_types = [ IntType, FloatType, CharType, BoolType, StringType]
 
 # Dict mapping all valid binary operations to a result type
 _supported_binops = {

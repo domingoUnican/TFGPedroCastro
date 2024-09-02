@@ -1,7 +1,7 @@
 # gone/llvmgen.py
 
 from llvmlite.ir import (
-    Module, IRBuilder, Function, IntType, DoubleType, VoidType, Constant, GlobalVariable,
+    Module, IRBuilder, Function, IntType, DoubleType, VoidType, PointerType, ArrayType, Constant, GlobalVariable,
     FunctionType
     )
 
@@ -9,7 +9,7 @@ from llvmlite.ir import (
 int_type    = IntType(32)         # 32-bit integer
 float_type  = DoubleType()        # 64-bit float
 byte_type   = IntType(8)          # 8-bit integer
-
+string_pointer_type = PointerType(IntType(8))
 void_type   = VoidType()          # Void type.  This is a special type
                                   # used for internal functions returning
                                   # no value
@@ -60,6 +60,18 @@ class GenerateLLVM(object):
                                                 FunctionType(void_type, [byte_type]),
                                                 name="_print_byte")
 
+        self.runtime['_print_string'] = Function(self.module,
+                                                FunctionType(void_type, [string_pointer_type]),
+                                                name="_print_string")
+
+        self.runtime['_coder_nlfsr'] = Function(self.module,
+                                                FunctionType(void_type, [string_pointer_type, string_pointer_type]),
+                                                name="_coder_nlfsr")
+
+        self.runtime['_decoder_nlfsr'] = Function(self.module,
+                                                FunctionType(void_type, [string_pointer_type, string_pointer_type]),
+                                                name="_decoder_nlfsr")
+
     def generate_function(self, function_name, params_types, return_type):
         params_types_llvm = [self.typemapper[p] for p in params_types]
         self.functions[function_name] = Function(self.module, FunctionType(self.typemapper[return_type],
@@ -103,7 +115,11 @@ class GenerateLLVM(object):
     def emit_MOVB(self, value, target):
         self.temps[target] = Constant(byte_type, value)
 
- 
+    def emit_MOVS(self, value, target):
+        string_encoded = bytearray(value.encode("utf-8")) + bytearray([0])
+        self.temps[target] = GlobalVariable(self.module,ArrayType(IntType(8), len(string_encoded)),name=target)
+        self.temps[target].initializer = Constant(ArrayType(IntType(8), len(string_encoded)), string_encoded) 
+
     def emit_VARI(self, name):
         var = GlobalVariable(self.module, int_type, name=name)
         var.initializer = Constant(int_type, 0)
@@ -117,6 +133,11 @@ class GenerateLLVM(object):
     def emit_VARB(self, name):
         var = GlobalVariable(self.module, byte_type, name=name)
         var.initializer = Constant(byte_type, 0)
+        self.vars[name] = var
+
+    def emit_VARS(self, name):
+        var = GlobalVariable(self.module, byte_type.as_pointer(), name=name)
+        var.initializer = Constant(byte_type.as_pointer(), None)
         self.vars[name] = var
 
     def emit_ALLOCI(self, name):
@@ -134,6 +155,11 @@ class GenerateLLVM(object):
         self.builder.store(Constant(byte_type, 0), local_byte_var)
         self.temps[name] = local_byte_var
     
+    def emit_ALLOCS(self, name):
+        local_byte_var = self.builder.alloca(byte_type.as_pointer(), name=name)
+        self.builder.store(Constant(byte_type.as_pointer(), None), local_byte_var)
+        self.temps[name] = local_byte_var
+    
 
 
  
@@ -146,6 +172,9 @@ class GenerateLLVM(object):
     def emit_LOADB(self, name, target):
         self.temps[target] = self.builder.load(self.vars[name], target)
     
+    def emit_LOADS(self, name, target):
+        self.temps[target] = self.builder.load(self.vars[name], target)
+    
     def emit_LOADFASTI(self, name, target):
         self.temps[target] = self.builder.load(self.temps[name], target)
 
@@ -153,6 +182,9 @@ class GenerateLLVM(object):
         self.temps[target] = self.builder.load(self.temps[name], target)
 
     def emit_LOADFASTB(self, name, target):
+        self.temps[target] = self.builder.load(self.temps[name], target)
+    
+    def emit_LOADFASTS(self, name, target): # load s
         self.temps[target] = self.builder.load(self.temps[name], target)
 
     def emit_STOREI(self, source, target):
@@ -163,6 +195,10 @@ class GenerateLLVM(object):
 
     def emit_STOREB(self, source, target):
         self.builder.store(self.temps[source], self.vars[target])
+    
+    def emit_STORES(self, source, target):
+        string_pointer = self.builder.bitcast(self.temps[source], string_pointer_type)
+        self.builder.store(self.temps[source], self.vars[target])
 
     def emit_STOREFASTI(self, source, target):
         self.builder.store(self.temps[source], self.temps[target])
@@ -172,6 +208,10 @@ class GenerateLLVM(object):
 
     def emit_STOREFASTB(self, source, target):
         self.builder.store(self.temps[source], self.temps[target])
+    
+    def emit_STOREFASTS(self, source, target):
+        string_pointer = self.builder.bitcast(self.temps[source], string_pointer_type)
+        self.builder.store(string_pointer, self.temps[target])
 
     # Binary logical operators
     def emit_AND(self, left, right, target):
@@ -237,6 +277,22 @@ class GenerateLLVM(object):
 
     def emit_PRINTB(self, source):
         self.builder.call(self.runtime['_print_byte'], [self.temps[source]])
+
+    def emit_PRINTS(self, source):
+        # we need to transform it to a i8 pointer (i8*) before passing to function
+        string_pointer = self.builder.bitcast(self.temps[source], string_pointer_type)
+        self.builder.call(self.runtime['_print_string'], [string_pointer])
+    
+    # CODING STATEMENTS
+    def emit_CODER(self, inputp, outputp):
+        string_pointer_input = self.builder.bitcast(self.temps[inputp], string_pointer_type)
+        string_pointer_output = self.builder.bitcast(self.temps[outputp], string_pointer_type)
+        self.builder.call(self.runtime['_coder_nlfsr'], [string_pointer_input, string_pointer_output])
+    
+    def emit_DECODER(self, inputp, outputp):
+        string_poiner_input = self.builder.bitcast(self.temps[inputp], string_pointer_type)
+        string_poiner_output = self.builder.bitcast(self.temps[outputp], string_pointer_type)
+        self.builder.call(self.runtime['_decoder_nlfsr'], [string_pointer_input, string_pointer_output])
 
     # Branch (If/Ifelse/While)
     def emit_BRANCH(self, block_name):

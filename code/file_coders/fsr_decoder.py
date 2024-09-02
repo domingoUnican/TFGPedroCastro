@@ -1,4 +1,5 @@
-from binary_op import XOR
+from utils.binary_op import XOR
+
 class FsrDecoder:
     def __init__(self, independent, minterms, m):
         self.independent = independent

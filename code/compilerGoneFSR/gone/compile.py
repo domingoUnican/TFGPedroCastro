@@ -1,13 +1,8 @@
 # gone/compile.py
-#
-# Project 5:
-# ----------
-# Compiles Gone code to a standalone executable using Clang.  This
-# requires the clang compiler to be installed on your machine.  You
-# might have to fiddle with some of the path settings and other details
-# to make this work.
-#
-# Note: A minor change is required in Project 8.  See note in the code below.
+'''
+Gone final comile step:
+    TODO: Quizas deberia de cambiar lo de la funcion premain para el codigo global
+'''
 
 import subprocess
 import sys

@@ -7,7 +7,7 @@ Reserved Keywords:
     PRINT   : 'print'
     INTTOFSR: 'int_to_fsr' TODO: implement this
 
-Identifiers (Same rules as for Python):
+Identifiers:
     ID      : Text starting with a letter or '_', followed by any number
               number of letters, digits, or underscores.
               Examples:  'abc' 'ABC' 'abc123' '_abc' 'a_b_c'
@@ -21,6 +21,8 @@ Operators and Delimiters:
     SEMI     : ';'
     LPAREN   : '('
     RPAREN   : ')'
+    LCURLY   : '{'
+    RCURLY   : '}'
 
 Literals:
     INTEGER :  123   (decimal)
@@ -35,7 +37,7 @@ Literals:
               '\\'    Backslash
               '\xhh'  (byte value)
 
-
+    STRING : ".*"
 Comments:  To be ignored by your lexer
      //             Skips the rest of the line
      /* ... */      Skips a block (no nesting allowed)
@@ -55,13 +57,13 @@ class GoneLexer(Lexer):
 
     tokens = {
         # keywords
-        CONST, VAR, PRINT, FUNC, RET,
+        CONST, VAR, PRINT, CODER, DECODER, FUNC, RET,
                  
         # Identifiers
         ID, IF, ELSE, WHILE,
 
         # Literals
-        INTEGER, FLOAT, CHAR, BOOL,
+        INTEGER, FLOAT, CHAR, BOOL, STRING,
 
         # ASSIGN
         ASSIGN,
@@ -74,9 +76,12 @@ class GoneLexer(Lexer):
 
         # Other symbols
         LPAREN, RPAREN, LCURLY, RCURLY, SEMI, COMMA }
+    
     CONST = r"\bconst\b"
     VAR = r"\bvar\b"
     PRINT = r"\bprint\b"
+    CODER = r"\bcoder\b"
+    DECODER = r"\bdecoder\b"
     FUNC = r'\bfunc\b'
     RET = r'\breturn\b'
 
@@ -138,7 +143,8 @@ class GoneLexer(Lexer):
 
 
     CHAR = r"'(?:\\(?:\\|n|x[0-9a-f]{2}|')|[^'\\])'"
-    
+    STRING = r"\".*\""
+
     @_(r"'.*")
     def unlimited_character(self, t):
         error(self.lineno,"Unterminated character literal")
