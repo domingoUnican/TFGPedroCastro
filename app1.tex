@@ -1,4 +1,88 @@
+\begin{lstlisting}[style=pythonStyle]
+program : statements
+        | empty
 
-[Meter aqui el BNF del parser del compilador, copiar del comentario del codigo]
+statements :  statements statement
+           |  statement
+
+statement :  const_declaration
+          |  var_declaration
+          |  assign_statement
+          |  print_statement
+          |  if_statement
+          |  while_statement
+          |  return_statement
+
+const_declaration : CONST ID = expression ;
+
+var_declaration : VAR ID datatype ;
+                | VAR ID datatype = expression ;
+
+assign_statement : location = expression ;
+
+print_statement : PRINT expression ;
+
+coder_statement: CODER expression , expression ;
+
+decoder_statement: DECODER expression , expression ;
+
+
+if_statement : IF expression { statements }
+             | IF expression { statements } ELSE { statements }
+             
+while_statement: WHILE expression { statements }
+
+function_definition : FUNC ID LPAREN arguments RPAREN datatype { statements }
+
+parameters: parameter
+           | parameters COMMA parameter
+           | expression
+           | empty
+
+function_calling: function_location LPAREN parameters RPAREN SEMI
+
+arg_declaration: ID datatype
+
+arguments: argument
+           | arguments comma argument
+           | arg_declaration
+           | empty
+
+expression : + expression
+           | - expression
+           | ! expression
+           | expression && expression
+           | expression || expression
+           | expression == expression
+           | expression != expression
+           | expression < expression
+           | expression <= expression
+           | expression > expression
+           | expression >= expression
+           | expression + expression
+           | expression - expression
+           | expression * expression           
+           | expression / expression
+           | ( expression )
+           | location
+           | literal
+           | function_call
+               
+
+literal : INTEGER     
+        | FLOAT       
+        | CHAR     
+        | BOOL 
+
+function_location: ID
+
+location : ID
+         ;
+
+datatype : ID
+         ;
+
+empty    :
+\end{lstlisting}
 
 

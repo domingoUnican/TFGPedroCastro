@@ -48,12 +48,12 @@ El otro tipo es más difícil de explicar y cómo en las siguientes secciones no
 
 
 \section{Algoritmo de Berlekamp-Massey}
-Antes de pasar al algoritmo sobre el que se central de traducción de una secuencia binaria a su FSR mínimo. Debemos explicar el procedimiento que toma como referencia, este es el algoritmo de \textit{Berlekamp Massey}. El algoritmo original, Berlekamp, del que deriva Berlekamp Massey, fue creado para decodificar códigos BCH (Bose-Chaudhuri-Hocquenghem), estos códigos se utilizan para codificar información de manera redundante por si hubiera algún fallo en la transmisión o en el almacenado de los datos poder corregirlos a través de Forward Error Correction (FEC). \\\\
-El algoritmo de Berlekamp-Massey, también llamado por su creador James Massey, \textit{LFSR Synthesis Algorithm (Berlekamp iterative algorithm)} en el articulo original \cite{massey1969shift}, es capaz de encontrar la recurrencia lineal más corta para cualquier secuencia numérica finita. Esto tiene mucho que ver con la modificación de este algoritmo que utilizaremos en la siguiente sección para calcular la complejidad no lineal de un secuencia binaria. Además también es el culpable de que el cifrado a través de LFSR sea inseguro, ya que si conoces una parte del texto claro de tamaño suficiente puedes recuperar el \textit{keystream} con el que se cifro.\\\\
+Antes de pasar al algoritmo sobre el que se central de traducción de una secuencia binaria a su FSR mínimo. Debemos explicar el procedimiento que toma como referencia, este es el algoritmo de \textit{Berlekamp Massey}, que fue propuesto por dos investigadores de forma independiente. La propuesta de \cite{berlekamp1970bch}  fue ideado para decodificar códigos BCH (Bose-Chaudhuri-Hocquenghem). Estos códigos se utilizan para codificar información de manera redundante por si hubiera algún fallo en la transmisión o en el almacenado de los datos poder corregirlos a través de Forward Error Correction (FEC). \\\\
+Por su parte, \cite{massey1969shift} propuso un algoritmo equivalente, que lo denominó \textit{LFSR Synthesis Algorithm (Berlekamp iterative algorithm)} en el articulo original , es capaz de encontrar la recurrencia lineal más corta para cualquier secuencia numérica finita. Esto tiene mucho que ver con la modificación de este algoritmo que utilizaremos en la siguiente sección para calcular la complejidad no lineal de un secuencia binaria. Además también es el culpable de que el cifrado a través de LFSR sea inseguro, ya que si conoces una parte del texto claro de tamaño suficiente puedes recuperar el \textit{keystream} con el que se cifró.\\\\
 Primero explicaré en que consiste el algoritmo para encontrar la recurrencia lineal mas corta para cualquier secuencia de números en base decimal. Dada una secuencia $s = \{s_0, s_1, \dots\}$ diremos que existe una secuencia de recurrencia lineal $c = \{c1, c2, \dots, c_n\}$, las cuales cumplen.
 \[s_i = \Sigma_{j=1}^n c_js_{i-j} \quad \text{para $i \geq n$}\]
 Para $i \geq n$ tan solo quiere decir que es para todos los números fuera de los casos base ya que los casos base de la recurrencia lineal serán desde $s_0$ hasta $s_n$. Un ejemplo de recurrencia lineal muy típico es la sucesión de Fibonacci o su primo hermana la sucesión de Lucas. \\\\
-Berlekamp Massey se basa en lo siguiente. Teniendo una secuencia $s$ cualquiera y una lista con los coeficientes de la recurrencia lineal vacío, ir rellenando la lista de coeficientes según se recorre la secuencia $s$ y en caso de que ocurra un fallo, aplicar una función correctora $d$. También hay que guardar copias de c y tener un índice de un fallo pasado, en el ejemplo veremos para que y por qué.\\\\ 
+El algoritmo Berlekamp Massey se basa en lo siguiente. Teniendo una secuencia $s$ cualquiera y una lista con los coeficientes de la recurrencia lineal vacío, ir rellenando la lista de coeficientes según se recorre la secuencia $s$ y en caso de que ocurra un fallo, aplicar una función correctora $d$. También hay que guardar copias de c y tener un índice de un fallo pasado, en el ejemplo veremos para que y por qué.\\\\ 
 Veamos esto con un ejemplo sencillo, dada la secuencia $s = \{ 1, 3, 9, 15, 9, -81 \}$ y la la lista $c = \{ \ \}$, asumiremos que si c está vacío, c será igual a 0. Definiremos como $pc$ (\textit{past c}) al conjunto que nos servirá como copia de c, el cual comienza vacío como $c$. Y la variable donde guardaremos el índice al fallo pasado como $f$.
 \\\\
 En la primera iteración: \\
@@ -86,14 +86,11 @@ Tras ejecutar todos los pasos para el cálculo de $d$, queda $d = \{ 0, 0, -12\}
 pc = c \quad \text{c es la versión de c de $i=2$, es decir, antes de sumar d}\\
 \)\\
 Esta actualización se debe a que esas variables deben cambiar cuando se cumple $i - len(c) > f - len(pc)$. Intuitivamente, diremos que $pc$ guardará el c con menos coeficientes respecto a donde fallo. \\\\%esto no se como explicarlo bien%
-Aquí está el pseudocódigo, podéis encontrar una implementación en Python escrita por mí en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/code_proofs/simple_berlekamp_massey.py}{simplebm.py} basado en uno de los códigos de \href{https://mzhang2021.github.io/cp-blog/berlekamp-massey/}{artículo berlekamp massey}.
-
-
-
+Aquí está el pseudocódigo, podéis encontrar una implementación en Python escrita por mí en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/code_proofs/simple_berlekamp_massey.py}{simplebm.py} basado en uno de los códigos del \href{https://mzhang2021.github.io/cp-blog/berlekamp-massey/}{artículo berlekamp massey}.
 \begin{algorithm}
 \caption{Algoritmo Berlekamp-Massey}\label{alg:two}
-\KwData{$s$ secuencia binaria}
-\KwResult{El LFSR mínimo}
+\KwData{$s$ secuencia númerica}
+\KwResult{La recurrencia lineal mínima}
 $c \gets [ \ ]$\;
 $pc \gets [ \ ]$\;
 $f \gets -1$\;
@@ -140,6 +137,7 @@ Seccion por pulir hasta aclarar el sentido de la diferencia simetrica de conjunt
 %\end{algorithm}
 \newpage
 \section{Non lineal Feedback Shift Register (NLFSR / FSR)}
+\label{nlfsr algorithm}
 %NOTA: Puede que sea importante explicar que es, y la conexion con el Lempel Ziv Compression)\\\\
 Uno de los objetivos de este proyecto ha sido intentar simplificar la función $h$ resultante del algoritmo del articulo \cite{limniotis2007nonlinear}. El paso previo ha sido analizar y dividir por partes el algoritmo hasta entenderlo completamente, esto ha sido de las cosas que más tiempo me han llevado. \\\\
 En esta sección, se tratará de explicar este algoritmo recursivo como a mi me hubiera gustado que me lo explicasen. Este procedimiento toma como base Berlekamp-Massey, el cual resuelve eficientemente el cálculo del LFSR mínimo, y lo adapta para conseguir un registro de desplazamiento no lineal (NLFSR) con un 
@@ -264,7 +262,7 @@ A continuación, tenéis una implementación general de este algoritmo, que devu
 \newpage
 \begin{algorithm}
 \caption{Algoritmo KMP (Knuth Morris Pratt)}\label{alg:four}
-\KwData{$s$ = cadena binaria}
+\KwData{$t$ = texto, $p$ = patrón}
 \KwResult{True si encuentra el patrón False si no lo encuentra}
 $n \gets len(t)$\;
 $m \gets len(p)$\;
@@ -302,7 +300,7 @@ $j \gets 0$\;
 }
 \texttt{return} $isFound$\;
 \end{algorithm}
-La tabla de debajo de este párrafo se ha tomado de \cite{leiserson2022introduction}, un libro donde explican en detalle y con claridad todos estos algoritmos de búsqueda en cadenas. Lo destacable de esta tarde es la notoria diferencia entre \textit{Knuth Morris Pratt} y el \textit{Naive}, este \textit{Naive} recorre la cadena buscando el patrón y cada vez que un carácter del patrón no le coincide, reinicia la búsqueda desde el siguiente carácter es por esto por lo que nos da una complejidad de $O((n-m+1)m)$. 
+La tabla de debajo de este párrafo se ha tomado de \cite{leiserson2022introduction}, un libro donde explican en detalle y claridad todos estos algoritmos de búsqueda en cadenas. Lo destacable de esta tarde es la notoria diferencia entre \textit{Knuth Morris Pratt} y el \textit{Naive}, este \textit{Naive} recorre la cadena buscando el patrón y cada vez que un carácter del patrón no le coincide, reinicia la búsqueda desde el siguiente carácter es por esto por lo que nos da una complejidad de $O((n-m+1)m)$. 
 \begin{center}
 \begin{tabular}{ l c c }
  Algortimo & Tiempo de Preprocesado & Tiempo de ejecución \\ \cline{1-3}
@@ -314,11 +312,12 @@ La tabla de debajo de este párrafo se ha tomado de \cite{leiserson2022introduct
 \end{center}
 
 Nosotros aplicaremos este algoritmo para encontrar el \textit{eigenvalue} de la siguiente manera en la función \textit{Eigenvalue} del pseudocódigo. Guardaremos en una variable $p$ (patrón), la cadena \texttt{reverse($y_0^{i-1}$)}, y en otra variable $t$ (texto), la cadena $p_1^{i-1}$. Y teniendo una función \textit{knuthmp} implementada con \textit{Knuth Morris Pratt}, que podéis consultar en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/minimal_fsr/knuthMorrisPratt.py}{kmp.py}, que lo que hace es devolver el numero de posiciones que se encuentran del patrón en el texto. Devolveremos
-\[Eigenvalue(y^i) = i - knuthmp(t, s)\]
-Esta diferencia puede dar como resultado un numero en el intervalo $[1, i]$ en función del numero de coincidencias del patrón.
+\[Eigenvalue(y^i) = i - knuthmp(t, p)\]
+Esta diferencia puede dar como resultado un numero en el intervalo $[1, i]$ en función del numero de coincidencias del patrón en el texto.
 
 
 \section{Formato de archivo nlfsr}
+\label{formato archivo nlfsr}
 El formato de archivo nlfsr (Non Linear Feedback Shift Register) es un formato el cual codifica la secuencia inicial y el polinomio FSR. Teniendo como objetivo hacer que este tipo de archivo ocupe el menor espacio posible, para ello he propuesto que la estructura del formato fuera la siguiente.
 \\
 \begin{figure}[h] 
@@ -328,18 +327,17 @@ El formato de archivo nlfsr (Non Linear Feedback Shift Register) es un formato e
     \label{fig:mi_imagen}
 \end{figure}
 
-\noindent El primer segmento del archivo es la longitud de la cadena original ($y^n$), contenido en 16 bits. Estos 16 bits limitan el tamaño de la secuencia a comprimir en este formato, a una secuencia de longitud máxima 65536. Este límite es arbitrario, pero una vez se haya leído toda la explicación del formato entenderéis que no es difícil adaptarlo para cadenas más largas.  El segundo segmento es la complejidad no lineal $m$ de $y^n$ contenida también en 16 bits (o 2 Bytes). El tercer segmento es la secuencia inicial que mide $m$ bits. Y el cuarto segmento es una lista de \textit{minterms}, aquí tenéis una representación de como se representa un \textit{minterm}.
-\\
+\noindent El primer segmento del archivo es la longitud de la cadena original ($y^n$), contenido en 16 bits. Estos 16 bits limitan el tamaño de la secuencia a comprimir en este formato, a una secuencia de longitud máxima 65536. Este límite es arbitrario, pero una vez se haya leído toda la explicación del formato se puede entender que no es difícil adaptarlo para cadenas más largas.  El segundo segmento es la complejidad no lineal $m$ de $y^n$ contenida también en 16 bits (o 2 Bytes). El tercer segmento es la secuencia inicial que mide $m$ bits. Y el cuarto segmento es una lista de \textit{minterms}, aquí tenéis una representación de como se representa un \textit{minterm}.
 \begin{figure}[h] % El [H] asegura que la imagen esté exactamente en ese lugar en el documento.
     \centering
     \includegraphics[width=\textwidth,keepaspectratio]{img/nlfsrformat_02.png} % La imagen se ajustará al ancho del texto, manteniendo la proporción.
     \parbox{\linewidth}{\centering Lista de minterms en formato .nlfsr}
     \label{fig:mi_imagen} % Etiqueta para referenciar la imagen en el documento.
-\end{figure}
+\end{figure}\\
 \noindent Cada \textit{minterm} consta de un primer segmento en el que se indica el numero de variables de ese producto de literales lógicos, o dicho de otra manera la longitud. Cada bit del \textit{minterm} representara el estado de ese literal en el producto, si su valor es 1 eso significa que el literal se encuentra negado, por otro lado, si es 0, significará que es positivo. De esta manera, conseguimos almacenar toda la información consumiendo el mínimo numero de bytes posibles. \\\\
 La longitud del propio \textit{minterm} actuando como delimitador entre \textit{minterms}, nos permite saber hasta donde tenemos que leer cuando haya que decodificar el archivo .nlfsr. Es importante aclarar, que no se pueden utilizar delimitadores fijos en este caso, como sí se en algunos protocolos de red, ya que toda secuencia podría estar dentro del minterm, y eso haría que se mezclasen los datos con las delimitaciones, lo cual provocaría errores en el momento de la lectura.
 \\\\
-He hecho unas gráficas para que se pueda ver la diferencia entre guardar un nlfsr de una secuencia con la misma estructura del formato .nlfsr pero usando caracteres ASCII, y utilizar el formato .nlfsr. Aquí tenéis las gráficas sin que se haya utilizado ningún algoritmo de compresión después. 
+Se han dibujado unas gráficas para que se pueda ver la diferencia entre guardar un nlfsr de una secuencia con la misma estructura del formato .nlfsr pero usando caracteres ASCII, y utilizar el formato .nlfsr. Aquí tenéis las gráficas sin que se haya utilizado ningún algoritmo de compresión después. 
 \begin{figure}[h] % El [H] asegura que la imagen esté exactamente en ese lugar en el documento.
     \centering
     \includegraphics[width=0.8\textwidth,keepaspectratio]{img/format_comparison_graph.jpeg}
@@ -352,7 +350,7 @@ He hecho unas gráficas para que se pueda ver la diferencia entre guardar un nlf
 \newpage
 \section{Minimización de ESOP}
 La minimización de expresiones de operaciones AND-OR cuenta con muchos algoritmos que hacen un buen trabajo, sin embargo la minimización de ESOP resulta ser mucho más compleja o al menos, no se han desarrollado algoritmos del mismo calibre. Pero primero, definamos que es todo esto.\\\\
-A la forma de la función FSR, se la conoce como ESOP (\textit{Exclusive Sum Of Products}). Una formula lógica con esta forma, tan solo puede tener dos operaciones: XOR (suma) y AND (multiplicación). Minimizar una fórmula ESOP, significa encontrar una formula de menor tamaño que tenga la misma tabla de verdad, o el mismo mapa de Karnaugh; en definitiva, que sean equivalentes.Aquí tenéis un ejemplo de un ESOP y su minimización, aunque más tarde veremos la teoría que hay detrás.
+A la forma de la función FSR, se la conoce como ESOP (\textit{Exclusive Sum Of Products}). Una formula lógica con esta forma, tan solo puede tener dos operaciones: XOR (suma) y AND (multiplicación). Minimizar una fórmula ESOP, significa encontrar una formula de menor tamaño que tenga la misma tabla de verdad, o el mismo mapa de Karnaugh; en definitiva, que sean equivalentes.Aquí tenéis un ejemplo de un ESOP y su minimización:
 \\\\
 \noindent
 \begin{minipage}{0.5\textwidth}
@@ -385,15 +383,15 @@ Ahora trataremos de encontrar una equivalencia entre $X_1X_2 \oplus X_2$ y un cu
      z(X_1, X_2) =  X'_1X_2 \\
      f' = z
      \end{align*}
-\end{minipage}%
+\end{minipage}\\
 %\newpage
 Y sabiendo esto, sustituimos en la formula original y nos queda un ESOP minimizado
 
 \[f_{min} = X_0X_1 \oplus X'_1X_2\]
-\\
-La \textit{Suma Exclusiva de Productos} se ha estudiado desde 1925 [Paper original], el artículo más reciente que he encontrado respecto a este tema es []. En este describen un algoritmo en el que mediante transformaciones de cubos, expresiones pseudokronecker, reescritura de términos \cite{brand1993minimization}, y estructuras de datos como BDD (Binary Decision Diagram). Nuestra aproximación al problema en este proyecto será mucho más sencilla pero haber leído todos estos artículos sobre el tema, me ha hecho entender más en profundidad lo complejo que es.
+\subsection{Investigación previa}
+La \textit{Suma Exclusiva de Productos} se ha estudiado desde 1927 por I.I. Zhegalkin, desde año se han escrito numerosos artículos realizando avances en el campo. En esta investigación se ha tomado como punto de partida la publicación \cite{mishchenko2001fast}. En este describen un algoritmo en el que mediante transformaciones de cubos, expresiones \textit{pseudokronecker}, reescritura de términos \cite{brand1993minimization}, y estructuras de datos como BDD (Binary Decision Diagram) (en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/miscellaneous/mfsr_to_BDD.py}{ESOPtoBDD.py} está escrito un algoritmo para pasar un ESOP a BDD). Nuestra aproximación al problema en este proyecto será mucho más sencilla pero haber leído todos estos artículos sobre el tema, me ha hecho entender más en profundidad lo complejo que es.
 \\\\
-A pesar de no hacer una implementación como la de [Heuristic Minimiza], en esta sección tomaremos prestada la teoría que elabora el artículo sobre los cubos que forman los ESOP. Definiremos como "cubo" a cada producto del ESOP. Definiremos como distancia entre cubos, el numero de variables que aparecen de distinta "forma" respecto al otro cubo. Una variable puede aparecer en un cubo de tres maneras: en positivo, negada, o no aparecer. Por ejemplo, un cubo $ab$ tiene distancia 1 respecto a un cubo $ab'$. Lo último, que creo que se debe tener en cuenta del articulo para la posible mejora de nuestro algoritmo, son dos proposiciones 
+En esta sección tomaremos prestada la teoría que elaboran \cite{mishchenko2001fast} sobre los cubos que forman los ESOP. Definiremos como ``cubo'' a cada producto del ESOP. Definiremos como distancia entre cubos, el numero de variables que aparecen de distinta ``forma'' respecto al otro cubo. Una variable puede aparecer en un cubo de tres maneras: en positivo, negada, o no aparecer. Por ejemplo, un cubo $ab$ tiene distancia 1 respecto a un cubo $ab'$. Estas dos proposiciones son cruciales:
 \begin{tcolorbox}
 \textbf{Proposición 1:}\\
 Si añades el mismo cubo dos veces a cualquier ESOP, la función no cambiará. \\
