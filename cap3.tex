@@ -48,12 +48,12 @@ El otro tipo es más difícil de explicar y cómo en las siguientes secciones no
 
 
 \section{Algoritmo de Berlekamp-Massey}
-Antes de pasar al algoritmo sobre el que se central de traducción de una secuencia binaria a su FSR mínimo. Debemos explicar el procedimiento que toma como referencia, este es el algoritmo de \textit{Berlekamp Massey}. El algoritmo original, Berlekamp, del que deriva Berlekamp Massey, fue creado para decodificar códigos BCH (Bose-Chaudhuri-Hocquenghem), estos códigos se utilizan para codificar información de manera redundante por si hubiera algún fallo en la transmisión o en el almacenado de los datos poder corregirlos a través de Forward Error Correction (FEC). \\\\
-El algoritmo de Berlekamp-Massey, también llamado por su creador James Massey, \textit{LFSR Synthesis Algorithm (Berlekamp iterative algorithm)} en el articulo original \cite{massey1969shift}, es capaz de encontrar la recurrencia lineal más corta para cualquier secuencia numérica finita. Esto tiene mucho que ver con la modificación de este algoritmo que utilizaremos en la siguiente sección para calcular la complejidad no lineal de un secuencia binaria. Además también es el culpable de que el cifrado a través de LFSR sea inseguro, ya que si conoces una parte del texto claro de tamaño suficiente puedes recuperar el \textit{keystream} con el que se cifro.\\\\
+Antes de pasar al algoritmo sobre el que se central de traducción de una secuencia binaria a su FSR mínimo. Debemos explicar el procedimiento que toma como referencia, este es el algoritmo de \textit{Berlekamp Massey}, que fue propuesto por dos investigadores de forma independiente. La propuesta de \cite{berlekamp1970bch}  fue ideado para decodificar códigos BCH (Bose-Chaudhuri-Hocquenghem). Estos códigos se utilizan para codificar información de manera redundante por si hubiera algún fallo en la transmisión o en el almacenado de los datos poder corregirlos a través de Forward Error Correction (FEC). \\\\
+Por su parte, \cite{massey1969shift} propuso un algoritmo equivalente, que lo denominó \textit{LFSR Synthesis Algorithm (Berlekamp iterative algorithm)} en el articulo original , es capaz de encontrar la recurrencia lineal más corta para cualquier secuencia numérica finita. Esto tiene mucho que ver con la modificación de este algoritmo que utilizaremos en la siguiente sección para calcular la complejidad no lineal de un secuencia binaria. Además también es el culpable de que el cifrado a través de LFSR sea inseguro, ya que si conoces una parte del texto claro de tamaño suficiente puedes recuperar el \textit{keystream} con el que se cifró.\\\\
 Primero explicaré en que consiste el algoritmo para encontrar la recurrencia lineal mas corta para cualquier secuencia de números en base decimal. Dada una secuencia $s = \{s_0, s_1, \dots\}$ diremos que existe una secuencia de recurrencia lineal $c = \{c1, c2, \dots, c_n\}$, las cuales cumplen.
 \[s_i = \Sigma_{j=1}^n c_js_{i-j} \quad \text{para $i \geq n$}\]
 Para $i \geq n$ tan solo quiere decir que es para todos los números fuera de los casos base ya que los casos base de la recurrencia lineal serán desde $s_0$ hasta $s_n$. Un ejemplo de recurrencia lineal muy típico es la sucesión de Fibonacci o su primo hermana la sucesión de Lucas. \\\\
-Berlekamp Massey se basa en lo siguiente. Teniendo una secuencia $s$ cualquiera y una lista con los coeficientes de la recurrencia lineal vacío, ir rellenando la lista de coeficientes según se recorre la secuencia $s$ y en caso de que ocurra un fallo, aplicar una función correctora $d$. También hay que guardar copias de c y tener un índice de un fallo pasado, en el ejemplo veremos para que y por qué.\\\\ 
+El algoritmo Berlekamp Massey se basa en lo siguiente. Teniendo una secuencia $s$ cualquiera y una lista con los coeficientes de la recurrencia lineal vacío, ir rellenando la lista de coeficientes según se recorre la secuencia $s$ y en caso de que ocurra un fallo, aplicar una función correctora $d$. También hay que guardar copias de c y tener un índice de un fallo pasado, en el ejemplo veremos para que y por qué.\\\\ 
 Veamos esto con un ejemplo sencillo, dada la secuencia $s = \{ 1, 3, 9, 15, 9, -81 \}$ y la la lista $c = \{ \ \}$, asumiremos que si c está vacío, c será igual a 0. Definiremos como $pc$ (\textit{past c}) al conjunto que nos servirá como copia de c, el cual comienza vacío como $c$. Y la variable donde guardaremos el índice al fallo pasado como $f$.
 \\\\
 En la primera iteración: \\
@@ -86,7 +86,7 @@ Tras ejecutar todos los pasos para el cálculo de $d$, queda $d = \{ 0, 0, -12\}
 pc = c \quad \text{c es la versión de c de $i=2$, es decir, antes de sumar d}\\
 \)\\
 Esta actualización se debe a que esas variables deben cambiar cuando se cumple $i - len(c) > f - len(pc)$. Intuitivamente, diremos que $pc$ guardará el c con menos coeficientes respecto a donde fallo. \\\\%esto no se como explicarlo bien%
-Aquí está el pseudocódigo, podéis encontrar una implementación en Python escrita por mí en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/code_proofs/simple_berlekamp_massey.py}{simplebm.py} basado en uno de los códigos de \href{https://mzhang2021.github.io/cp-blog/berlekamp-massey/}{artículo berlekamp massey}.
+Aquí está el pseudocódigo, podéis encontrar una implementación en Python escrita por mí en \href{https://github.com/domingoUnican/TFGPedroCastro/blob/main/code/code_proofs/simple_berlekamp_massey.py}{simplebm.py} basado en uno de los códigos del \href{https://mzhang2021.github.io/cp-blog/berlekamp-massey/}{artículo berlekamp massey}.
 
 
 
@@ -140,6 +140,7 @@ Seccion por pulir hasta aclarar el sentido de la diferencia simetrica de conjunt
 %\end{algorithm}
 \newpage
 \section{Non lineal Feedback Shift Register (NLFSR / FSR)}
+\label{nlfsr algorithm}
 %NOTA: Puede que sea importante explicar que es, y la conexion con el Lempel Ziv Compression)\\\\
 Uno de los objetivos de este proyecto ha sido intentar simplificar la función $h$ resultante del algoritmo del articulo \cite{limniotis2007nonlinear}. El paso previo ha sido analizar y dividir por partes el algoritmo hasta entenderlo completamente, esto ha sido de las cosas que más tiempo me han llevado. \\\\
 En esta sección, se tratará de explicar este algoritmo recursivo como a mi me hubiera gustado que me lo explicasen. Este procedimiento toma como base Berlekamp-Massey, el cual resuelve eficientemente el cálculo del LFSR mínimo, y lo adapta para conseguir un registro de desplazamiento no lineal (NLFSR) con un 
