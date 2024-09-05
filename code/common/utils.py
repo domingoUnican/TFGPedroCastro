@@ -1,9 +1,10 @@
+# Autor: Pedro Castro
 import pdb
 import re
 from collections import deque
 
 '''
-TODO: cambiar el sequence por initial state, y luego pasar otro parametro que sea la longitud total de la sequencia.
+Verifies that the fsr poly is correct if it can recover the original sequence
 Parameters
 ---------
 sequence -> initial sequence
@@ -37,8 +38,6 @@ the value of the function with those parameters
 def logic_poly_executer(poly, values):
     for i, v in enumerate(values):
         poly = re.sub(r'x{}\b'.format(i), str(v), poly)
-    print(poly)
-    print(values)
     return eval(poly)%2
 
         

@@ -1,5 +1,7 @@
-# gone/llvmgen.py
-
+'''
+LLVM generation
+Author: Pedro Castro
+'''
 from llvmlite.ir import (
     Module, IRBuilder, Function, IntType, DoubleType, VoidType, PointerType, ArrayType, Constant, GlobalVariable,
     FunctionType
@@ -26,8 +28,6 @@ class GenerateLLVM(object):
         self.functions = {}
         self.cur_function = 'undefined'
 
-        # Dictionary that holds all of the global variable/function declarations.
-        # *Any declaration* in the Gone source code is going to get an entry here
         self.vars = {}
 
         # Dictionary that holds all of the temporary registers created in

@@ -1,7 +1,0 @@
-
-                        no zip          with zip
-textFile434(string) ->  555486          45411
-textFile434(nlfsr)  ->   13825           7613
-
-
-

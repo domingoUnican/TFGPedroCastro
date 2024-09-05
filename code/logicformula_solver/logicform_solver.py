@@ -31,12 +31,9 @@ def evaluation(f, values):
 def calc_all_form_results(num_variables, num_op):
     tiempo = time.time()
     all_eval = set()
-    print(num_op)
     for t in itertools.product(range(num_variables + 3), repeat=num_op):
         string = formula(list(t))
         if 'S' not in string:
-            print(string)
-            print(list(t))
             result = []
             for values in itertools.product([False, True], repeat=num_variables):
                 result.append(evaluation(list(t), values))

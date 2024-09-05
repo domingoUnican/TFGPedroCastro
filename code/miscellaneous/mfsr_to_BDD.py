@@ -1,20 +1,19 @@
 from BDD_node import BDDnode
 from utils import logic_poly_executer
-'''
-(pasar esta descripcion despues a dentro del metodo)
-Constructs a BDD (Binary Decision Diagram) from
-an string representing the msfr polynomio of a sequence
-Space complexity -> O(2^n) n -> being the number of parameters (x1, ..., xn)
-Parameters
-----------
- - msfr polynomio : string
- - n : int -> number of variables
-Returns
--------
-a node which is the root of the BDD 
-'''
-
+# Author: Pedro Castro
 def msfr_to_BDD(msfr_poly, n):
+    '''
+    Constructs a BDD (Binary Decision Diagram) from
+    an string representing the msfr polynomio of a sequence
+    Space complexity -> O(2^n) n -> being the number of parameters (x1, ..., xn)
+    Parameters
+    ----------
+    - msfr polynomio : string
+    - n : int -> number of variables
+    Returns
+    -------
+    a node which is the root of the BDD 
+    '''
     n2 = 2**n
     root = BDDnode(name="x0")
 

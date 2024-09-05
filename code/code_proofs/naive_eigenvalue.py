@@ -2,6 +2,7 @@
 Implementacion sencilla de
 calculo de los eigenwords y eigenvalue
 de una secuencia binaria
+Autor: Pedro Castro
 '''
 import sys
 import copy

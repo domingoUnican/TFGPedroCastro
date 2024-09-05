@@ -1,4 +1,7 @@
-# gone/checker.py
+'''
+Semantic Analysis
+Author: Pedro Castro
+'''
 from .errors import error
 from .ast import *
 from .typesys import IntType, FloatType, CharType, StringType, BoolType, Type, check_binop, check_unaryop
@@ -8,7 +11,7 @@ class CheckProgramVisitor(NodeVisitor):
         # Initialize the symbol table
         self.symbols = { }
         self.local_symbols = { }
-        self.returned_branches = [] # Registro al que se añade un booleana cada vez que se bifurca el flow del programa en una funcion, siendo True si ese Flow retorna o False si no retorna nada
+        self.returned_branches = [] # Lista a la que se añade un booleano cada vez que se bifurca el flow del programa en una funcion, siendo True si ese Flow retorna o False si no retorna nada
                                   # Este registro solamente es necesario verificarlo si la funcion en su flujo principal no retorna
         self.functions = { } # functions table, should be initialized with built-in functions( o no, antes no tenia print, y entendia bien la funcion print, cambiar cuando toque)
         self.cur_function = None # current function
@@ -23,7 +26,7 @@ class CheckProgramVisitor(NodeVisitor):
 
     # NODE Methods ...
     def visit_ArgumentDeclaration(self, node):
-        total_symbols = self.symbols | self.local_symbols
+        total_symbols = self.symbols | self.local_symbols # union entre simbolos locales y globales
         location_node = total_symbols.get(node.name, None)
         if location_node:
             error(node.lineno, f"can't declare {node.name} as an arg, a symbol with that name already exists")
@@ -34,6 +37,9 @@ class CheckProgramVisitor(NodeVisitor):
         self.local_symbols[node.name] = node
 
     def visit_ConstDeclaration(self, node):
+        if node.name in self.builtin_types:
+            error(node.lineno, f"{node.name} redefined. Previous definition on <builtin type>")
+            return None
         table = self.symbols if self.global_code else self.local_symbols
         previous_instance = table.get(node.name, None)
         if not previous_instance:
@@ -83,7 +89,7 @@ class CheckProgramVisitor(NodeVisitor):
             error(node.lineno, "%s undefined" % node.name)
             return None
         if node.usage == "write" and not isinstance(location_node, VarDeclaration) and not isinstance(location_node, ArgumentDeclaration):
-            print(location_node)
+            #print(location_node)
             error(node.lineno, f"Cant assign to {node.name}")
             return None
         node.type = location_node.type

@@ -1,14 +1,8 @@
 import pdb
-# Notas:
-# Es importante saber que se especifica en la guia del lenguaje que no se hace
-# automatic type coercion por lo que no se pueden sumar por ejemplo int + float porque no hay
-# conversion de tipos automatica forzada
-# gone/ircode.py
-#
-# Booleans:
-# true = 1, false = 0
-# Nota Urgente: lo mejor seria comparar con las clases de typesys.py 
-# en lugar de con los strings que es muy cutre
+'''
+IR Code generation
+Author: Pedro Castro
+'''
 '''
 Here is an instruction set specification for the IRCode:
 
@@ -17,6 +11,8 @@ Here is an instruction set specification for the IRCode:
     ALLOCI name                ;  Allocate an integer variabe on the stack
     LOADI  name, target        ;  Load an integer from a variable
     STOREI target, name        ;  Store an integer into a variable
+    LOADFASTI  name, target        ;  Load an integer from a local variable
+    STOREFASTI target, name        ;  Store an integer into a local variable
     ADDI   r1, r2, target      ;  target = r1 + r2
     SUBI   r1, r2, target      ;  target = r1 - r2
     MULI   r1, r2, target      ;  target = r1 * r2
@@ -32,6 +28,8 @@ Here is an instruction set specification for the IRCode:
     ALLOCF name                ;  Allocate a float variable on the stack
     LOADF  name, target        ;  Load a float from a variable
     STOREF target, name        ;  Store a float into a variable
+    LOADFASTF  name, target        ;  Load a float from a local variable
+    STOREFASTF target, name        ;  Store a float into a local variable
     ADDF   r1, r2, target      ;  target = r1 + r2
     SUBF   r1, r2, target      ;  target = r1 - r2
     MULF   r1, r2, target      ;  target = r1 * r2
@@ -44,9 +42,18 @@ Here is an instruction set specification for the IRCode:
     ALLOCB name                ; Allocate a byte variable
     LOADB  name, target        ; Load a byte from a variable
     STOREB target, name        ; Store a byte into a variable
+    LOADFASTB  name, target        ;  Load a byte from a local variable
+    STOREFASTB target, name        ;  Store a byte into a local variable
     PRINTB source              ; print source (debugging)
-    ITOB   r2, target          ; Truncate an integer to a byte
     CMPB   op, r1, r2, target  ; r1 op r2 -> target
+
+    MOVS   value, target       ;  Load a literal string
+    VARS   name                ;  Declare an string variable 
+    ALLOCS name                ;  Allocate an string variabe on the stack
+    LOADS  name, target        ;  Load an string from a global variable
+    STORES target, name        ;  Store an string into a global variable
+    LOADFASTS  name, target        ;  Load an string from a local variable
+    STOREFASTS target, name        ;  Store an string into a local variable
 
 control flow instructions
 
@@ -85,7 +92,7 @@ class GenerateCode(ast.NodeVisitor):
         self.get_bool_binopcodes = lambda x, args_type : {'int': 'CMPI', 'float': 'CMPF', 'char': 'CMPB'}.get(args_type, None) if x in self.cmp_op  else {'&&': 'AND', '||': 'OR'}.get(x, None)
         self.logical_op = ['&&' '||']
         # print types
-        self.print_types = {'int': 'PRINTI', 'bool': 'PRINTB', 'char': 'PRINTI', 'float': 'PRINTF', 'string': 'PRINTS'}
+        self.print_types = {'int': 'PRINTI', 'bool': 'PRINTI', 'char': 'PRINTB', 'float': 'PRINTF', 'string': 'PRINTS'}
 
     def new_register(self):
          '''

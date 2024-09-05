@@ -1,21 +1,6 @@
-# gone/typesys.py
 '''
-Gone Type System
-================
-This file implements basic features of the Gone type system.  There is
-a lot of flexibility possible here, but the best strategy might be to
-not overthink the problem.  At least not at first.  Here are the
-minimal basic requirements:
-
-1. Types have names (e.g., IntType, FloatType, 'char')
-2. Types have to be comparable. (e.g., int != float).
-3. Types support different operators (e.g., +, -, *, /, etc.)
-
-To deal with all this initially, I'd recommend representing types
-as simple strings.  Make tables that represent the capabilities
-of different types. Make some utility functions that check operators.
-KEEP IT SIMPLE. REPEAT. SIMPLE.
-
+Gone Type System Module
+Author: Pedro Castro
 '''
 class Type:
     name = "type"

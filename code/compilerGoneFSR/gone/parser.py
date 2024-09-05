@@ -1,11 +1,8 @@
-import pdb
+# import pdb
 '''
-NOTAS presentacion:
-Contar lo que ha costado quitar los shift/reduce y reduce/reduce conflictss,
-me complique mucho y al final tan solo era indicar las reglas de precedencia para que supiera
-el parser que priorizar a la hora de shiftear o reducir (deberia de repasar que significan estas 2 cosas)
+Parser Gone FSR
+Author: Pedro Castro
 '''
-# gone/parser.py
 '''
 program : statements
         | empty
@@ -30,17 +27,31 @@ assign_statement : location = expression ;
 
 print_statement : PRINT expression ;
 
+coder_statement: CODER expression , expression ;
+
+decoder_statement: DECODER expression , expression ;
+
+
 if_statement : IF expression { statements }
              | IF expression { statements } ELSE { statements }
              
 while_statement: WHILE expression { statements }
 
-function_def : FUNC name LPAREN args RPAREN datatype { statements }
+function_definition : FUNC ID LPAREN arguments RPAREN datatype { statements }
 
-args : ID datatype # Esto sera algo asi pero no asi 100%
+parameters: parameter
+           | parameters COMMA parameter
+           | expression
+           | empty
 
-args: args COMMA args
+function_calling: function_location LPAREN parameters RPAREN SEMI
 
+arg_declaration: ID datatype
+
+arguments: argument
+           | arguments comma argument
+           | arg_declaration
+           | empty
 
 expression : + expression
            | - expression
@@ -67,6 +78,8 @@ literal : INTEGER
         | FLOAT       
         | CHAR     
         | BOOL 
+
+function_location: ID
 
 location : ID
          ;

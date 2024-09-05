@@ -1,11 +1,13 @@
-import pdb
-# gone/tokenizer.py
+#import pdb
+'''
+Lexer
+Author: Pedro Castro
+'''
 r'''
 Reserved Keywords:
     CONST   : 'const'
     VAR     : 'var'  
     PRINT   : 'print'
-    INTTOFSR: 'int_to_fsr' TODO: implement this
 
 Identifiers:
     ID      : Text starting with a letter or '_', followed by any number
@@ -111,7 +113,7 @@ class GoneLexer(Lexer):
         self.lineno += t.value.count('\n')
         error(self.lineno,"Unterminated comment")
 
-    # --> Ignored characters (whitespace)
+    # <-- Ignored characters (whitespace)
 
     # Logical operators (CUIDADO, el orden de definicion importa)
     AND = r'&&'

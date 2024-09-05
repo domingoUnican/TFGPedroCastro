@@ -1,4 +1,7 @@
-
+'''
+BDD node Class
+Written by Pedro Castro
+'''
 class BDDnode:
     def __init__(self, name="not named", left=None, right=None, val=None):
         self.name = name
